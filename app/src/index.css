@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Fraunces", ui-serif, Georgia, serif;
+  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
+
+  --color-paper: #faf7f2;
+  --color-card: #ffffff;
+  --color-sand: #f2ece3;
+  --color-line: #e7dfd3;
+  --color-ink: #1f1a17;
+  --color-ink-2: #4b423b;
+  --color-mute: #8a7f75;
+  --color-saffron: #b4532a;
+  --color-saffron-50: #fbefe8;
+  --color-marigold: #e5a43b;
+  --color-sage: #3f7a5a;
+  --color-sage-50: #e8f2ec;
+  --color-rose: #b3364a;
+  --color-rose-50: #fbe9ec;
+  --color-amber: #a86a0d;
+  --color-amber-50: #fdf3df;
+  --color-sky: #2f6690;
+  --color-sky-50: #e7f0f7;
+
+  --radius-xl: 14px;
+  --radius-2xl: 20px;
+  --shadow-card: 0 1px 0 rgba(31, 26, 23, 0.04), 0 1px 2px rgba(31, 26, 23, 0.05);
+  --shadow-pop: 0 12px 40px -12px rgba(31, 26, 23, 0.28);
+}
+
+html, body, #root { height: 100%; }
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+h1, h2, h3, .display { font-family: var(--font-display); letter-spacing: -0.01em; }
+button, a, [role="button"] { touch-action: manipulation; }
+:focus-visible { outline: 2px solid var(--color-saffron); outline-offset: 2px; border-radius: 6px; }
+input, select, textarea { font: inherit; }
+.tabular { font-variant-numeric: tabular-nums; }
+.scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
+.safe-bottom { padding-bottom: max(env(safe-area-inset-bottom), 0px); }
+.pb-nav { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
+@media (min-width: 1024px) { .pb-nav { padding-bottom: 0; } }
+
+@keyframes pop-in { from { opacity: 0; transform: translateY(6px) scale(.98); } to { opacity: 1; transform: none; } }
+@keyframes sheet-in { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+.anim-pop { animation: pop-in .18s ease-out; }
+.anim-sheet { animation: sheet-in .22s cubic-bezier(.2, .8, .2, 1); }
+.anim-fade { animation: fade-in .15s ease-out; }
+.live-dot { animation: pulse-dot 1.4s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .anim-pop, .anim-sheet, .anim-fade, .live-dot { animation: none; } }
