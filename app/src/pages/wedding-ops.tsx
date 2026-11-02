@@ -46,7 +46,7 @@ export function Travel() {
             cols={[
               { key: 'g', label: 'Guest', mobile: 'title', render: t => <span className="font-semibold">{t.guest_name}{t.vip ? ' 👑' : ''} <span className="font-normal text-mute">· {t.pax} pax</span></span> },
               { key: 'f', label: 'Flight / train', mobile: 'sub', render: t => t.number ? `${t.carrier || ''} ${t.number} · ${t.from_loc || '?'} → ${t.to_loc || '?'}` : t.status === 'self' ? 'Own arrangements' : '—' },
-              { key: 'a', label: 'Arrives', render: t => t.arrive_at ? <span className={t.delay_min ? 'text-rose' : ''}>{dateTime(t.arrive_at)}{t.delay_min ? ` (+${t.delay_min}m)` : ''}</span> : '—' },
+              { key: 'a', label: 'Arrives', render: t => t.arrive_at ? <span className={t.delay_min ? 'text-bad' : ''}>{dateTime(t.arrive_at)}{t.delay_min ? ` (+${t.delay_min}m)` : ''}</span> : '—' },
               { key: 's', label: 'Status', render: t => <span className="flex gap-1"><Status s={t.status} />{t.live_status && t.live_status !== 'on_time' && <Status s={t.live_status} />}</span> },
               { key: 'p', label: 'Pickup', render: t => t.pickup_required ? (t.trip_id ? <Badge tone="sky">in trip</Badge> : <Badge tone="amber">unassigned</Badge>) : <span className="text-mute">no</span> },
               { key: 'x', label: '', mobile: 'hide', render: t => t.status === 'confirmed' && <Button size="sm" variant="ghost" icon={Timer} onClick={() => setDelay(t)}>Delay</Button> },
@@ -92,10 +92,10 @@ function TicketModal({ open, onClose, onDone }: any) {
       footer={res ? <Button variant="primary" onClick={onDone}>Done</Button> : <><Button onClick={onClose}>Cancel</Button><Button variant="primary" disabled={!g || (!file && !text)} loading={busy === 'u'} onClick={go}>Extract</Button></>}>
       {res ? <div className="space-y-3">
         <Callout tone={res.travel.status === 'confirmed' ? 'sage' : 'amber'} icon={res.travel.status === 'confirmed' ? CheckCircle2 : AlertTriangle}>{res.travel.status === 'confirmed' ? 'High confidence — saved and added to the pickup pool.' : 'Low confidence — sent to the review queue.'} ({Math.round(res.extraction.confidence * 100)}%)</Callout>
-        <dl className="grid grid-cols-2 gap-2 text-sm">{[['Carrier', res.extraction.carrier], ['Number', res.extraction.number], ['From', res.extraction.from_loc], ['To', res.extraction.to_loc], ['Date', res.extraction.date], ['Arrives', res.extraction.time]].map(([k, v]) => <div key={k}><dt className="text-xs text-mute">{k}</dt><dd className="font-semibold">{v || <span className="text-rose">not found</span>}</dd></div>)}</dl>
+        <dl className="grid grid-cols-2 gap-2 text-sm">{[['Carrier', res.extraction.carrier], ['Number', res.extraction.number], ['From', res.extraction.from_loc], ['To', res.extraction.to_loc], ['Date', res.extraction.date], ['Arrives', res.extraction.time]].map(([k, v]) => <div key={k}><dt className="text-xs text-mute">{k}</dt><dd className="font-semibold">{v || <span className="text-bad">not found</span>}</dd></div>)}</dl>
       </div> : <div className="space-y-3">
         <Select label="Guest (household lead)" value={g} onChange={e => setG(e.target.value)} placeholder="Choose…" options={(guests || []).filter(x => x.is_primary).map(x => ({ value: x.id, label: `${x.name}${x.household ? ` · ${x.household}` : ''}` }))} />
-        <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-line p-4 hover:bg-paper"><Upload className="size-5 text-saffron" /><span className="text-sm">{file ? file.name : 'Choose PDF, image or text ticket'}</span><input type="file" className="sr-only" accept=".pdf,.png,.jpg,.jpeg,.txt" onChange={e => setFile(e.target.files?.[0] || null)} /></label>
+        <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-line p-4 hover:bg-canvas"><Upload className="size-5 text-brand" /><span className="text-sm">{file ? file.name : 'Choose PDF, image or text ticket'}</span><input type="file" className="sr-only" accept=".pdf,.png,.jpg,.jpeg,.txt" onChange={e => setFile(e.target.files?.[0] || null)} /></label>
         <Textarea label="…or paste the ticket / forwarded WhatsApp text" rows={3} value={text} onChange={e => setText(e.target.value)} placeholder="IndiGo 6E 2134 DEL→UDR 21 Nov 09:40, 2 adults" />
       </div>}
     </Modal>
@@ -152,7 +152,7 @@ function Pickups({ data, reload }: any) {
       <Modal open={!!move} onClose={() => setMove(null)} title={`Move ${move?.stop.name}`} size="sm">
         <Divided>
           {data.trips.filter((x: any) => x.id !== move?.trip.id).map((x: any) => <Row key={x.id} onClick={() => run('mv', () => post(`/weddings/${wid}/trips/${move.trip.id}/move`, { travel_id: move.stop.travel_id, to_trip_id: x.id }), 'Moved').then(() => { setMove(null); reload() })}><div className="flex-1 text-sm"><b>{x.location}</b> · {time(x.window_start)}–{time(x.window_end)} · {x.pax} pax</div></Row>)}
-          <Row onClick={() => run('mv', () => post(`/weddings/${wid}/trips/${move.trip.id}/move`, { travel_id: move.stop.travel_id }), 'Removed from trip').then(() => { setMove(null); reload() })}><div className="flex-1 text-sm text-rose">Remove from trip (unassigned)</div></Row>
+          <Row onClick={() => run('mv', () => post(`/weddings/${wid}/trips/${move.trip.id}/move`, { travel_id: move.stop.travel_id }), 'Removed from trip').then(() => { setMove(null); reload() })}><div className="flex-1 text-sm text-bad">Remove from trip (unassigned)</div></Row>
         </Divided>
       </Modal>
     </div>
@@ -164,23 +164,23 @@ function TripCard({ t, data, selected, onSelect, onConfirm, onMove }: any) {
   useEffect(() => { const v = data.vehicles.find((x: any) => x.id === veh); if (v?.driver_vendor_id && !drv) setDrv(v.driver_vendor_id) }, [veh])
   const editable = ['suggested', 'needs_replan', 'confirmed'].includes(t.status)
   return (
-    <Card className={cx('flex flex-col', t.status === 'needs_replan' && 'border-rose/40', selected && 'ring-2 ring-saffron/40')}>
+    <Card className={cx('flex flex-col', t.status === 'needs_replan' && 'border-bad/40', selected && 'ring-2 ring-brand/40')}>
       <div className="flex items-start justify-between gap-2 border-b border-line p-4">
         <div className="flex items-start gap-2">
-          {editable && <input type="checkbox" aria-label="Select trip" className="mt-1 accent-[#b4532a]" checked={selected} onChange={onSelect} />}
-          <div><div className="flex items-center gap-2 font-semibold"><Plane className="size-4 text-saffron" />{t.location} pickup</div><div className="text-xs text-mute">{date(t.window_start)} · {time(t.window_start)}–{time(t.window_end)} · {t.pax} pax</div></div>
+          {editable && <input type="checkbox" aria-label="Select trip" className="mt-1 accent-[#0E6B66]" checked={selected} onChange={onSelect} />}
+          <div><div className="flex items-center gap-2 font-semibold"><Plane className="size-4 text-brand" />{t.location} pickup</div><div className="text-xs text-mute">{date(t.window_start)} · {time(t.window_start)}–{time(t.window_end)} · {t.pax} pax</div></div>
         </div>
         <Status s={t.status} />
       </div>
       <Divided className="flex-1">{(t.stops || []).map((s: any) => (
         <div key={s.travel_id} className="flex items-center gap-2 px-4 py-2 text-sm">
           <div className="min-w-0 flex-1"><span className="font-medium">{s.name}</span> <span className="text-xs text-mute">· {s.pax} · {s.number} {time(s.arrive_at)}</span></div>
-          {s.status && s.status !== 'waiting' ? <Status s={s.status} /> : editable && <button className="text-xs font-semibold text-saffron" onClick={() => onMove(s)}>Move</button>}
+          {s.status && s.status !== 'waiting' ? <Status s={s.status} /> : editable && <button className="text-xs font-semibold text-brand" onClick={() => onMove(s)}>Move</button>}
         </div>
       ))}</Divided>
       <div className="space-y-2 border-t border-line p-4">
         {t.status === 'suggested' && <div className="text-xs text-mute">Suggested vehicle: <b className="text-ink">{t.suggested_kind}</b></div>}
-        {t.vehicle_label && <div className="flex items-center gap-2 text-sm"><Car className="size-4 text-mute" />{t.vehicle_label} {t.plate} · {t.driver_name} {t.driver_phone && <a href={`tel:${t.driver_phone}`} className="text-saffron"><Phone className="inline size-3.5" /></a>}</div>}
+        {t.vehicle_label && <div className="flex items-center gap-2 text-sm"><Car className="size-4 text-mute" />{t.vehicle_label} {t.plate} · {t.driver_name} {t.driver_phone && <a href={`tel:${t.driver_phone}`} className="text-brand"><Phone className="inline size-3.5" /></a>}</div>}
         {editable && <div className="grid grid-cols-2 gap-2">
           <Select aria-label="Vehicle" value={veh} onChange={e => setVeh(e.target.value)} placeholder="Vehicle" options={data.vehicles.map((v: any) => ({ value: v.id, label: `${v.label} (${v.capacity})` }))} />
           <Select aria-label="Driver" value={drv} onChange={e => setDrv(e.target.value)} placeholder="Driver" options={data.drivers.map((d: any) => ({ value: d.id, label: d.name }))} />
@@ -200,7 +200,7 @@ function Vehicles({ data, reload }: any) {
       <DataTable rows={data.vehicles} rowKey={v => v.id} onRow={setF} empty={<Empty icon={Car} title="No vehicles" />} cols={[
         { key: 'l', label: 'Vehicle', mobile: 'title', render: v => v.label }, { key: 'k', label: 'Type', render: v => v.kind }, { key: 'c', label: 'Seats', render: v => v.capacity }, { key: 'p', label: 'Plate', render: v => v.plate }, { key: 'd', label: 'Default driver', render: v => v.driver_name || '—' },
       ]} />
-      <Modal open={!!f} onClose={() => setF(null)} title={f?.id ? 'Edit vehicle' : 'Add vehicle'} size="sm" footer={<>{f?.id && <Button variant="ghost" className="mr-auto text-rose" onClick={() => run('d', () => del(`/weddings/${wid}/vehicles/${f.id}`), 'Removed').then(() => { setF(null); reload() })}>Remove</Button>}<Button onClick={() => setF(null)}>Cancel</Button><Button variant="primary" onClick={() => run('s', () => f.id ? patch(`/weddings/${wid}/vehicles/${f.id}`, f) : post(`/weddings/${wid}/vehicles`, f), 'Saved').then(() => { setF(null); reload() })}>Save</Button></>}>
+      <Modal open={!!f} onClose={() => setF(null)} title={f?.id ? 'Edit vehicle' : 'Add vehicle'} size="sm" footer={<>{f?.id && <Button variant="ghost" className="mr-auto text-bad" onClick={() => run('d', () => del(`/weddings/${wid}/vehicles/${f.id}`), 'Removed').then(() => { setF(null); reload() })}>Remove</Button>}<Button onClick={() => setF(null)}>Cancel</Button><Button variant="primary" onClick={() => run('s', () => f.id ? patch(`/weddings/${wid}/vehicles/${f.id}`, f) : post(`/weddings/${wid}/vehicles`, f), 'Saved').then(() => { setF(null); reload() })}>Save</Button></>}>
         {f && <div className="grid grid-cols-2 gap-3"><Input className="col-span-2" label="Label" value={f.label} onChange={e => setF({ ...f, label: e.target.value })} /><Select label="Type" value={f.kind} onChange={e => setF({ ...f, kind: e.target.value })} options={['Sedan', 'SUV', 'Tempo Traveller', 'Coach']} /><Input label="Seats" type="number" value={f.capacity} onChange={e => setF({ ...f, capacity: +e.target.value })} /><Input label="Plate" value={f.plate || ''} onChange={e => setF({ ...f, plate: e.target.value })} /><Select label="Driver" value={f.driver_vendor_id || ''} onChange={e => setF({ ...f, driver_vendor_id: e.target.value })} placeholder="None" options={data.drivers.map((d: any) => ({ value: d.id, label: d.name }))} /></div>}
       </Modal>
     </Card>
@@ -261,7 +261,7 @@ export function Rooms() {
             </Card>
             <Card>
               <CardHeader title="Conflicts" sub={data.conflicts.length ? `${crit} critical` : 'None'} icon={AlertTriangle} />
-              <Divided className="max-h-80 overflow-y-auto">{data.conflicts.slice(0, 40).map((x: any, i: number) => <div key={i} className="flex gap-2 px-4 py-2 text-xs"><span className={cx('mt-1 size-1.5 shrink-0 rounded-full', x.severity === 'critical' ? 'bg-rose' : 'bg-marigold')} />{x.message}</div>)}</Divided>
+              <Divided className="max-h-80 overflow-y-auto">{data.conflicts.slice(0, 40).map((x: any, i: number) => <div key={i} className="flex gap-2 px-4 py-2 text-xs"><span className={cx('mt-1 size-1.5 shrink-0 rounded-full', x.severity === 'critical' ? 'bg-bad' : 'bg-haldi')} />{x.message}</div>)}</Divided>
             </Card>
           </div>
           <div className="space-y-4">
@@ -277,10 +277,10 @@ export function Rooms() {
                       const over = r.guests.length > r.capacity
                       return (
                         <div key={r.id} onDragOver={e => e.preventDefault()} onDrop={() => drag && assign(drag, r.id)} onClick={() => drag && assign(drag, r.id)}
-                          className={cx('min-h-24 rounded-xl border p-2.5 transition-colors', drag ? 'cursor-copy border-dashed border-saffron/60 bg-saffron-50/30' : 'border-line', over && 'border-rose bg-rose-50/40', r.status !== 'available' && 'opacity-50')}>
-                          <div className="mb-1.5 flex items-center justify-between text-xs"><span className="font-bold">{r.number}</span><span className="flex items-center gap-1 text-mute">{r.accessible ? <Accessibility className="size-3 text-sky" /> : null}{r.category} · {r.guests.length}/{r.capacity}</span></div>
+                          className={cx('min-h-24 rounded-xl border p-2.5 transition-colors', drag ? 'cursor-copy border-dashed border-brand/60 bg-brand-50/30' : 'border-line', over && 'border-bad bg-bad-50/40', r.status !== 'available' && 'opacity-50')}>
+                          <div className="mb-1.5 flex items-center justify-between text-xs"><span className="font-bold">{r.number}</span><span className="flex items-center gap-1 text-mute">{r.accessible ? <Accessibility className="size-3 text-info" /> : null}{r.category} · {r.guests.length}/{r.capacity}</span></div>
                           <div className="flex flex-wrap gap-1">{r.guests.map((g: any) => <GuestChip key={g.guest_id} g={{ ...g, id: g.guest_id }} small active={drag === g.guest_id} onPick={e => { e?.stopPropagation(); setDrag(drag === g.guest_id ? null : g.guest_id) }} status={g.status} />)}</div>
-                          {r.status !== 'available' && <div className="mt-1 text-[11px] text-rose">{r.status.replace('_', ' ')}</div>}
+                          {r.status !== 'available' && <div className="mt-1 text-[11px] text-bad">{r.status.replace('_', ' ')}</div>}
                         </div>
                       )
                     })}
@@ -317,8 +317,8 @@ export function Rooms() {
 function GuestChip({ g, onPick, active, small, status }: { g: any; onPick: (e?: any) => void; active?: boolean; small?: boolean; status?: string }) {
   return (
     <button draggable onDragStart={() => onPick()} onClick={onPick} title={[g.household, g.accessibility, status].filter(Boolean).join(' · ')}
-      className={cx('inline-flex items-center gap-1 rounded-full border px-2 font-medium', small ? 'h-6 text-[11px]' : 'h-7 text-xs', active ? 'border-saffron bg-saffron text-white' : status === 'final' || status === 'checked_in' ? 'border-sage/30 bg-sage-50 text-sage' : status === 'pending_approval' ? 'border-sky/30 bg-sky-50 text-sky' : 'border-line bg-card')}>
-      {g.vip ? <Crown className="size-3 text-marigold" /> : null}{g.accessibility ? <Accessibility className="size-3" /> : null}{g.name.split(' ')[0]} {g.name.split(' ').slice(-1)[0][0]}.{g.age_group === 'child' && <span className="opacity-60">·kid</span>}
+      className={cx('inline-flex items-center gap-1 rounded-full border px-2 font-medium', small ? 'h-6 text-[11px]' : 'h-7 text-xs', active ? 'border-brand bg-brand text-white' : status === 'final' || status === 'checked_in' ? 'border-ok/30 bg-ok-50 text-ok' : status === 'pending_approval' ? 'border-info/30 bg-info-50 text-info' : 'border-line bg-card')}>
+      {g.vip ? <Crown className="size-3 text-haldi" /> : null}{g.accessibility ? <Accessibility className="size-3" /> : null}{g.name.split(' ')[0]} {g.name.split(' ').slice(-1)[0][0]}.{g.age_group === 'child' && <span className="opacity-60">·kid</span>}
     </button>
   )
 }
@@ -384,7 +384,7 @@ export function WeddingVendors() {
         {list.map(v => {
           const done = (v.deliverables || []).filter((d: any) => d.done).length
           return (
-            <Card key={v.id} className={cx('flex flex-col', v.status === 'cancelled' && 'opacity-60', v.live_status === 'delayed' && 'border-rose/40')}>
+            <Card key={v.id} className={cx('flex flex-col', v.status === 'cancelled' && 'opacity-60', v.live_status === 'delayed' && 'border-bad/40')}>
               <div className="flex items-start justify-between gap-2 p-4">
                 <div className="min-w-0"><div className="truncate font-semibold">{v.name}</div><div className="truncate text-xs text-mute">{v.kind} · {v.role}</div></div>
                 <div className="flex flex-col items-end gap-1"><Status s={v.status} />{v.live_status && <Status s={v.live_status} label={v.live_status === 'delayed' ? `+${v.delay_min}m late` : undefined} />}</div>
@@ -394,16 +394,16 @@ export function WeddingVendors() {
                 <div className="flex justify-between"><span className="text-mute">Reports</span><b>{dateTime(v.report_at)}</b></div>
                 <div className="flex justify-between"><span className="text-mute">Location</span><b className="truncate pl-4">{v.report_location || '—'}</b></div>
                 {v.quote ? <div className="flex justify-between"><span className="text-mute">Quote</span><b>{inr(v.quote)}</b></div> : null}
-                {v.on_time_pct !== null && <div className="flex justify-between"><span className="text-mute">On-time history</span><b className={v.on_time_pct < 80 ? 'text-amber' : 'text-sage'}>{v.on_time_pct}%</b></div>}
+                {v.on_time_pct !== null && <div className="flex justify-between"><span className="text-mute">On-time history</span><b className={v.on_time_pct < 80 ? 'text-warn' : 'text-ok'}>{v.on_time_pct}%</b></div>}
                 {(v.deliverables || []).length > 0 && <div><div className="mb-1 flex justify-between"><span className="text-mute">Deliverables</span><b>{done}/{v.deliverables.length}</b></div><Progress value={done} max={v.deliverables.length} tone="sage" /></div>}
-                {v.backup_name && <div className="text-rose">Replaced by {v.backup_name}</div>}
+                {v.backup_name && <div className="text-bad">Replaced by {v.backup_name}</div>}
               </div>
               <div className="mt-auto flex flex-wrap gap-1.5 border-t border-line p-3">
                 {v.status === 'pending' && <><Button size="sm" icon={Send} onClick={() => run('r', () => post(`/weddings/${wid}/vendor-assignments/${v.id}/remind`), 'Reminder sent').then(reload)}>Remind</Button><Button size="sm" variant="ghost" onClick={() => act(v, 'confirm')}>Mark confirmed</Button></>}
                 {v.status === 'confirmed' && !v.live_status && <Button size="sm" variant="ghost" onClick={() => act(v, 'arrived')}>Arrived</Button>}
                 {v.live_status === 'delayed' && <Button size="sm" icon={AlertTriangle} onClick={() => fetchImpact(wid!, v, setImpact)}>Impact</Button>}
-                {v.status !== 'cancelled' && v.status !== 'completed' && <Button size="sm" variant="ghost" className="text-rose" onClick={() => setBackup(v)}>Backup / replace</Button>}
-                {v.phone && <a href={`tel:${v.phone}`} className="inline-flex h-8 items-center gap-1 rounded-lg px-2 text-xs font-semibold text-ink-2 hover:bg-sand"><Phone className="size-3.5" />Call</a>}
+                {v.status !== 'cancelled' && v.status !== 'completed' && <Button size="sm" variant="ghost" className="text-bad" onClick={() => setBackup(v)}>Backup / replace</Button>}
+                {v.phone && <a href={`tel:${v.phone}`} className="inline-flex h-8 items-center gap-1 rounded-lg px-2 text-xs font-semibold text-ink-2 hover:bg-wash"><Phone className="size-3.5" />Call</a>}
               </div>
             </Card>
           )
@@ -479,8 +479,8 @@ export function Budget() {
         <div className="grid gap-x-8 gap-y-4 p-5 md:grid-cols-2">
           {Object.entries(data.categories).map(([k, c]: any) => (
             <div key={k}>
-              <div className="mb-1 flex items-baseline justify-between text-sm"><span className="font-semibold">{k}</span><span className="tabular text-xs"><span className={c.actual > c.planned ? 'font-semibold text-rose' : ''}>{inr(c.actual)}</span> <span className="text-mute">/ {inr(c.planned)}</span></span></div>
-              <div className="relative h-2 overflow-hidden rounded-full bg-sand"><div className={cx('h-full rounded-full', c.actual > c.planned ? 'bg-rose' : 'bg-sage')} style={{ width: `${Math.min(100, c.actual / Math.max(1, c.planned) * 100)}%` }} /></div>
+              <div className="mb-1 flex items-baseline justify-between text-sm"><span className="font-semibold">{k}</span><span className="tabular text-xs"><span className={c.actual > c.planned ? 'font-semibold text-bad' : ''}>{inr(c.actual)}</span> <span className="text-mute">/ {inr(c.planned)}</span></span></div>
+              <div className="relative h-2 overflow-hidden rounded-full bg-wash"><div className={cx('h-full rounded-full', c.actual > c.planned ? 'bg-bad' : 'bg-ok')} style={{ width: `${Math.min(100, c.actual / Math.max(1, c.planned) * 100)}%` }} /></div>
             </div>
           ))}
         </div>
@@ -492,7 +492,7 @@ export function Budget() {
             { key: 'c', label: 'Category', mobile: 'title', render: l => <span className="font-semibold">{l.category}</span> },
             { key: 'l', label: 'Line', mobile: 'sub', render: l => l.label || l.vendor_name || '—' },
             { key: 'p', label: 'Planned', render: l => <span className="tabular">{inrFull(l.planned)}</span> },
-            { key: 'a', label: 'Actual', render: l => <span className={cx('tabular', l.over && 'font-semibold text-rose')}>{inrFull(l.actual)}</span> },
+            { key: 'a', label: 'Actual', render: l => <span className={cx('tabular', l.over && 'font-semibold text-bad')}>{inrFull(l.actual)}</span> },
             { key: 'v', label: 'Variance', render: l => l.variance_pct === null ? '—' : <Badge tone={l.over ? 'rose' : l.variance_pct > 0 ? 'amber' : 'sage'}>{l.variance_pct > 0 ? '+' : ''}{l.variance_pct}%</Badge> },
             { key: 'h', label: '', mobile: 'hide', render: l => l.over && data.host_visible && <Button size="sm" variant="ghost" icon={Stamp} onClick={e => { e.stopPropagation(); run('hd', () => post(`/weddings/${wid}/budget/lines/${l.id}/host-decision`, {}), 'Decision request sent to host').then(reload) }}>Ask host</Button> },
           ]} />
@@ -500,12 +500,12 @@ export function Budget() {
       ) : (
         <Card>
           <DataTable rows={data.expenses} rowKey={e => e.id} onRow={setExp} empty={<Empty icon={Receipt} title="No expenses yet" />} cols={[
-            { key: 'l', label: 'Expense', mobile: 'title', render: e => <span className="font-semibold">{e.label || '—'}{e.flagged && <AlertTriangle className="ml-1 inline size-3.5 text-amber" aria-label={e.flagged} />}</span> },
+            { key: 'l', label: 'Expense', mobile: 'title', render: e => <span className="font-semibold">{e.label || '—'}{e.flagged && <AlertTriangle className="ml-1 inline size-3.5 text-warn" aria-label={e.flagged} />}</span> },
             { key: 'c', label: 'Category', mobile: 'sub', render: e => `${e.category || 'Unlinked'}${e.vendor_name ? ` · ${e.vendor_name}` : ''}` },
             { key: 'd', label: 'Date', render: e => date(e.date) },
             { key: 'a', label: 'Amount', render: e => <span className="tabular">{e.currency !== data.currency ? `${e.currency} ${e.amount.toLocaleString()} → ` : ''}{inrFull(e.amount_base)}</span> },
             { key: 's', label: 'Payment', render: e => <button onClick={ev => { ev.stopPropagation(); run('p', () => patch(`/weddings/${wid}/budget/expenses/${e.id}`, { payment_status: e.payment_status === 'paid' ? 'unpaid' : 'paid' })).then(reload) }}><Status s={e.payment_status === 'paid' ? 'done' : 'pending'} label={e.payment_status} /></button> },
-            { key: 'f', label: '', mobile: 'meta', render: e => e.flagged ? <span className="text-xs text-amber">{e.flagged}</span> : null },
+            { key: 'f', label: '', mobile: 'meta', render: e => e.flagged ? <span className="text-xs text-warn">{e.flagged}</span> : null },
           ]} />
         </Card>
       )}
@@ -526,7 +526,7 @@ function ExpenseModal({ e, lines, vendors, fx, onClose, onDone }: any) {
     return run('s', () => api('POST', `/weddings/${wid}/budget/expenses`, fd), (r: any) => r.flagged ? `Recorded — flagged: ${r.flagged}` : 'Expense recorded').then(onDone)
   }
   return (
-    <Modal open={!!e} onClose={onClose} title={f.id ? 'Expense' : 'Record expense'} size="md" footer={<>{f.id && <Button variant="ghost" className="mr-auto text-rose" icon={Trash2} onClick={() => run('d', () => del(`/weddings/${wid}/budget/expenses/${f.id}`), 'Deleted').then(onDone)}>Delete</Button>}<Button onClick={onClose}>Cancel</Button><Button variant="primary" loading={busy === 's'} onClick={save}>Save</Button></>}>
+    <Modal open={!!e} onClose={onClose} title={f.id ? 'Expense' : 'Record expense'} size="md" footer={<>{f.id && <Button variant="ghost" className="mr-auto text-bad" icon={Trash2} onClick={() => run('d', () => del(`/weddings/${wid}/budget/expenses/${f.id}`), 'Deleted').then(onDone)}>Delete</Button>}<Button onClick={onClose}>Cancel</Button><Button variant="primary" loading={busy === 's'} onClick={save}>Save</Button></>}>
       {f.flagged && <div className="mb-3"><Callout tone="amber" action={<button className="text-sm font-semibold underline" onClick={() => setF({ ...f, flagged: '' })}>Not a duplicate</button>}>{f.flagged}</Callout></div>}
       <div className="grid gap-3 sm:grid-cols-2">
         <Input className="sm:col-span-2" label="Description" value={f.label || ''} onChange={x => setF({ ...f, label: x.target.value })} />
@@ -536,7 +536,7 @@ function ExpenseModal({ e, lines, vendors, fx, onClose, onDone }: any) {
         <Select label="Currency" value={f.currency || 'INR'} onChange={x => setF({ ...f, currency: x.target.value })} options={Object.keys(fx)} disabled={!!f.id} hint={f.currency && f.currency !== 'INR' ? `1 ${f.currency} = ₹${fx[f.currency]}` : undefined} />
         <Input label="Date" type="date" value={f.date || ''} onChange={x => setF({ ...f, date: x.target.value })} disabled={!!f.id} />
         <Select label="Payment status" value={f.payment_status || 'unpaid'} onChange={x => setF({ ...f, payment_status: x.target.value })} options={[{ value: 'unpaid', label: 'Unpaid' }, { value: 'partial', label: 'Partially paid' }, { value: 'paid', label: 'Paid' }]} />
-        {!f.id && <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-line p-3 text-sm sm:col-span-2"><Upload className="size-4 text-saffron" />{file ? file.name : 'Attach invoice / receipt'}<input type="file" className="sr-only" accept=".pdf,.png,.jpg,.jpeg" onChange={x => setFile(x.target.files?.[0] || null)} /></label>}
+        {!f.id && <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-line p-3 text-sm sm:col-span-2"><Upload className="size-4 text-brand" />{file ? file.name : 'Attach invoice / receipt'}<input type="file" className="sr-only" accept=".pdf,.png,.jpg,.jpeg" onChange={x => setFile(x.target.files?.[0] || null)} /></label>}
       </div>
     </Modal>
   )
@@ -547,7 +547,7 @@ function LineModal({ l, vendors, onClose, onDone }: any) {
   const { run, busy } = useAction()
   useEffect(() => { if (l) setF(l) }, [l])
   return (
-    <Modal open={!!l} onClose={onClose} title={f.id ? 'Budget line' : 'New budget line'} size="sm" footer={<>{f.id && <Button variant="ghost" className="mr-auto text-rose" onClick={() => run('d', () => del(`/weddings/${wid}/budget/lines/${f.id}`), 'Deleted').then(onDone)}>Delete</Button>}<Button onClick={onClose}>Cancel</Button><Button variant="primary" loading={busy === 's'} disabled={!f.category} onClick={() => run('s', () => f.id ? patch(`/weddings/${wid}/budget/lines/${f.id}`, { category: f.category, label: f.label, planned: +f.planned, vendor_id: f.vendor_id || null }) : post(`/weddings/${wid}/budget/lines`, { ...f, planned: +f.planned }), 'Saved').then(onDone)}>Save</Button></>}>
+    <Modal open={!!l} onClose={onClose} title={f.id ? 'Budget line' : 'New budget line'} size="sm" footer={<>{f.id && <Button variant="ghost" className="mr-auto text-bad" onClick={() => run('d', () => del(`/weddings/${wid}/budget/lines/${f.id}`), 'Deleted').then(onDone)}>Delete</Button>}<Button onClick={onClose}>Cancel</Button><Button variant="primary" loading={busy === 's'} disabled={!f.category} onClick={() => run('s', () => f.id ? patch(`/weddings/${wid}/budget/lines/${f.id}`, { category: f.category, label: f.label, planned: +f.planned, vendor_id: f.vendor_id || null }) : post(`/weddings/${wid}/budget/lines`, { ...f, planned: +f.planned }), 'Saved').then(onDone)}>Save</Button></>}>
       <div className="space-y-3"><Input label="Category" value={f.category || ''} onChange={x => setF({ ...f, category: x.target.value })} placeholder="Decor" /><Input label="Label" value={f.label || ''} onChange={x => setF({ ...f, label: x.target.value })} /><Input label="Planned (₹)" type="number" value={f.planned ?? ''} onChange={x => setF({ ...f, planned: x.target.value })} /><Select label="Linked vendor quote" value={f.vendor_id || ''} onChange={x => setF({ ...f, vendor_id: x.target.value })} placeholder="None" options={vendors.map((v: any) => ({ value: v.id, label: v.name }))} /></div>
     </Modal>
   )

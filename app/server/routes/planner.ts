@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { all, get, insert, update, remove, run, tx, uid, now } from '../db.ts'
+import { all, get, insert, update, remove, run, tx, uid, now, localDate } from '../db.ts'
 import {
   auth, wrap, fail, can, isAdmin, requirePerm, weddingScope, weddingIdsFor, canWedding, audit, notify, emit,
   createSession, verifyPassword, hashPassword, createLink, linkUrl, PERMISSION_KEYS,
@@ -82,6 +82,48 @@ planner.get('/notifications', wrap(req => {
 planner.post('/notifications/read', wrap(req => {
   if (req.body?.id) run('UPDATE notifications SET read = 1 WHERE id = ? AND agency_id = ?', req.body.id, req.user!.agency_id)
   else run('UPDATE notifications SET read = 1 WHERE agency_id = ? AND (user_id IS NULL OR user_id = ?)', req.user!.agency_id, req.user!.id)
+}))
+
+// Coordinator "My shift": what this person needs to do now, across only their assigned weddings.
+planner.get('/shift', wrap(req => {
+  const u = req.user!
+  const ids = weddingIdsFor(u)
+  const ph = ids.map(() => '?').join(',') || "''"
+  const today = localDate()
+  const endOfDay = `${today}T23:59:59`
+  const weddings = ids.length ? all(`SELECT w.id, w.name, w.couple, w.start_date, w.end_date, w.city, w.venue, w.status, w.live_function_id,
+      (SELECT responsibilities FROM wedding_team wt WHERE wt.wedding_id = w.id AND wt.user_id = ?) AS responsibilities
+    FROM weddings w WHERE w.id IN (${ph}) AND w.status IN ('planning','live') ORDER BY w.start_date`, u.id, ...ids)
+    .map(w => ({ ...w, responsibilities: w.responsibilities || [] })) : []
+  const functions = all(`SELECT f.*, w.name AS wedding FROM functions f JOIN weddings w ON w.id = f.wedding_id WHERE f.wedding_id IN (${ph}) AND f.date = ? ORDER BY f.start_time`, ...ids, today)
+  const tasks = all(`SELECT t.*, w.name AS wedding FROM tasks t LEFT JOIN weddings w ON w.id = t.wedding_id
+    WHERE t.owner_id = ? AND t.status != 'done' AND (t.due_at IS NULL OR t.due_at <= ?) ORDER BY CASE WHEN t.due_at < ? THEN 0 ELSE 1 END, t.due_at LIMIT 20`, u.id, endOfDay, now())
+  const later = get(`SELECT COUNT(*) n FROM tasks WHERE owner_id = ? AND status != 'done' AND due_at > ?`, u.id, endOfDay).n
+  const incidents = all(`SELECT i.*, w.name AS wedding, f.name AS function_name FROM incidents i JOIN weddings w ON w.id = i.wedding_id LEFT JOIN functions f ON f.id = i.function_id
+    WHERE i.wedding_id IN (${ph}) AND i.status != 'resolved' AND (i.owner_id = ? OR i.owner_id IS NULL) ORDER BY CASE i.severity WHEN 'critical' THEN 0 WHEN 'high' THEN 1 WHEN 'medium' THEN 2 ELSE 3 END`, ...ids, u.id)
+  const vendors = all(`SELECT va.id, va.wedding_id, va.status, va.live_status, va.delay_min, va.report_at, v.name, v.kind, v.phone, w.name AS wedding FROM vendor_assignments va JOIN vendors v ON v.id = va.vendor_id JOIN weddings w ON w.id = va.wedding_id
+    WHERE va.wedding_id IN (${ph}) AND va.status != 'cancelled' AND (va.live_status = 'delayed' OR (va.status = 'pending' AND va.report_at <= ?)) ORDER BY va.report_at`, ...ids, new Date(Date.now() + 3 * 864e5).toISOString())
+  const inbox = get(`SELECT COUNT(*) n FROM messages WHERE wedding_id IN (${ph}) AND direction = 'in' AND handled = 0 AND (assigned_to = ? OR assigned_to IS NULL)`, ...ids, u.id).n
+  const nextEvent = get(`SELECT e.*, w.name AS wedding FROM events e LEFT JOIN weddings w ON w.id = e.wedding_id WHERE e.owner_id = ? AND e.start_at > ? ORDER BY e.start_at LIMIT 1`, u.id, now())
+
+  let now_: any = null
+  const live = weddings.find(w => w.status === 'live' && w.live_function_id)
+  if (live) {
+    const f = get('SELECT * FROM functions WHERE id = ?', live.live_function_id)
+    const expected = get(`SELECT COALESCE(SUM(headcount),0) n FROM rsvps WHERE function_id = ? AND status = 'attending'`, f.id).n
+    const arrived = get(`SELECT COALESCE(SUM(r.headcount),0) n FROM rsvps r JOIN guests g ON g.id = r.guest_id WHERE r.function_id = ? AND r.status = 'attending' AND g.checked_in = 1`, f.id).n
+    now_ = { kind: 'live', wedding_id: live.id, wedding: live.name, function: f.name, venue: f.venue, end_time: f.end_time, arrived, expected, incidents: incidents.filter(i => i.wedding_id === live.id).length }
+  } else if (tasks.find(t => t.due_at && t.due_at < now())) {
+    const t = tasks.find(t => t.due_at && t.due_at < now())
+    now_ = { kind: 'overdue', task: t }
+  } else {
+    const nextFn = functions.find(f => (f.start_time || '00:00') >= new Date().toTimeString().slice(0, 5))
+    const fnAt = nextFn ? new Date(`${nextFn.date}T${nextFn.start_time || '00:00'}`).toISOString() : null
+    if (nextEvent && (!fnAt || nextEvent.start_at < fnAt)) now_ = { kind: 'event', title: nextEvent.title, at: nextEvent.start_at, where: nextEvent.location, wedding: nextEvent.wedding }
+    else if (nextFn) now_ = { kind: 'function', title: nextFn.name, at: fnAt, where: nextFn.venue, wedding: nextFn.wedding, wedding_id: nextFn.wedding_id }
+    else if (weddings[0]) now_ = { kind: 'countdown', wedding: weddings[0].name, wedding_id: weddings[0].id, date: weddings[0].start_date, venue: weddings[0].venue }
+  }
+  return { user: { name: u.name }, today, now: now_, weddings, functions, tasks, later_tasks: later, incidents, vendors, inbox }
 }))
 
 planner.get('/search', wrap(req => {

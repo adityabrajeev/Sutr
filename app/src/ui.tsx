@@ -6,18 +6,20 @@ import { initials } from './format'
 export const cx = (...c: any[]) => c.filter(Boolean).join(' ')
 
 // ---------------------------------------------------------------- Button
-type BtnVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'success' | 'dark'
+type BtnVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'success' | 'dark' | 'haldi' | 'onDark'
 const BTN: Record<BtnVariant, string> = {
-  primary: 'bg-saffron text-white hover:bg-[#9c4623] shadow-sm',
-  dark: 'bg-ink text-paper hover:bg-ink-2',
-  secondary: 'bg-card text-ink border border-line hover:bg-sand',
-  ghost: 'text-ink-2 hover:bg-sand',
-  danger: 'bg-rose text-white hover:bg-[#9a2c3f]',
-  success: 'bg-sage text-white hover:bg-[#33664a]',
+  primary: 'bg-brand text-white hover:bg-[#0B5753]',
+  haldi: 'bg-haldi text-ink hover:bg-[#D9A21F]',
+  onDark: 'bg-white/10 text-white hover:bg-white/20',
+  dark: 'bg-ink text-canvas hover:bg-ink-2',
+  secondary: 'bg-card text-ink border border-line hover:bg-wash',
+  ghost: 'text-ink-2 hover:bg-wash',
+  danger: 'bg-bad text-white hover:bg-[#941D13]',
+  success: 'bg-ok text-white hover:bg-[#1C6440]',
 }
 export function Button({ variant = 'secondary', size = 'md', loading, icon: Icon, children, className, ...p }:
   React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: BtnVariant; size?: 'sm' | 'md' | 'lg'; loading?: boolean; icon?: any }) {
-  const sz = size === 'sm' ? 'h-8 px-3 text-[13px] gap-1.5' : size === 'lg' ? 'h-12 px-5 text-[15px] gap-2' : 'h-10 px-4 text-sm gap-2'
+  const sz = size === 'sm' ? 'h-8 px-3 text-[13px] gap-1.5' : size === 'lg' ? 'h-12 px-5 text-[15px] gap-2' : 'h-11 px-4 text-sm gap-2'
   return (
     <button {...p} disabled={p.disabled || loading}
       className={cx('inline-flex items-center justify-center rounded-xl font-semibold transition-colors disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap', sz, BTN[variant], className)}>
@@ -27,8 +29,56 @@ export function Button({ variant = 'secondary', size = 'md', loading, icon: Icon
   )
 }
 export const IconButton = ({ icon: Icon, label, className, ...p }: React.ButtonHTMLAttributes<HTMLButtonElement> & { icon: any; label: string }) => (
-  <button aria-label={label} title={label} {...p} className={cx('inline-flex size-9 items-center justify-center rounded-lg text-ink-2 hover:bg-sand disabled:opacity-40', className)}><Icon className="size-[18px]" /></button>
+  <button aria-label={label} title={label} {...p} className={cx('inline-flex size-9 items-center justify-center rounded-lg text-ink-2 hover:bg-wash disabled:opacity-40', className)}><Icon className="size-[18px]" /></button>
 )
+
+// ---------------------------------------------------------------- The "now" ticket
+// The single bold element on every persona home: indigo card, turmeric stub, perforated edge,
+// signage-width numerals. Use exactly one per screen.
+export type TicketRow = { icon?: any; text: React.ReactNode }
+export function Ticket({ stub, stubIcon: StubIcon, title, sub, sign, signLabel, rows = [], actions, hole, className, live }: {
+  stub: React.ReactNode; stubIcon?: any; title: React.ReactNode; sub?: React.ReactNode; sign?: React.ReactNode; signLabel?: React.ReactNode
+  rows?: TicketRow[]; actions?: React.ReactNode; hole?: string; className?: string; live?: boolean
+}) {
+  return (
+    <section className={cx('ticket anim-ticket', className)} style={hole ? ({ '--ticket-hole': hole } as any) : undefined} aria-label={typeof stub === 'string' ? stub : 'Now'}>
+      <div className="ticket-stub flex items-center gap-2 px-5 py-2 text-sm font-semibold">
+        {live ? <span className="live-dot size-2 rounded-full bg-bad" aria-hidden /> : StubIcon ? <StubIcon className="size-4" aria-hidden /> : null}
+        <span>{stub}</span>
+      </div>
+      {/* Short signs (10d, 214, +3) sit beside the title; long ones (12:10 pm, 28/43) get their own line. */}
+      <div className={cx('flex gap-4 px-5 pt-4 pb-5', String(sign ?? '').length > 5 ? 'flex-col' : 'items-start justify-between')}>
+        <div className="min-w-0">
+          <div className="display text-[22px] text-white sm:text-[26px]">{title}</div>
+          {sub && <div className="mt-1 text-[15px] text-white/75">{sub}</div>}
+        </div>
+        {sign !== undefined && sign !== null && <div className={cx('shrink-0', String(sign).length > 5 ? 'flex items-baseline gap-3' : 'text-right')}><div className="sign whitespace-nowrap text-[44px] text-haldi sm:text-[52px]">{sign}</div>{signLabel && <div className={cx('mt-1 text-xs text-white/60', String(sign).length > 5 && 'min-w-0 flex-1 text-sm')}>{signLabel}</div>}</div>}
+      </div>
+      {(rows.length > 0 || actions) && <div className="ticket-perf" aria-hidden />}
+      {rows.length > 0 && (
+        <ul className="space-y-2 px-5 pt-4 text-[15px] text-white/90">
+          {rows.map((r, i) => <li key={i} className="flex items-start gap-2.5">{r.icon && <r.icon className="mt-0.5 size-4 shrink-0 text-haldi" aria-hidden />}<span className="min-w-0">{r.text}</span></li>)}
+        </ul>
+      )}
+      {actions && <div className="flex flex-wrap gap-2 px-5 pt-4 pb-5">{actions}</div>}
+      {!actions && rows.length > 0 && <div className="pb-5" />}
+    </section>
+  )
+}
+
+/** "2h 10m" / "in 4 days" / "now" countdown that ticks every 30 s. */
+export function useCountdown(iso?: string | null) {
+  const [, tick] = useState(0)
+  useEffect(() => { const t = setInterval(() => tick(x => x + 1), 30000); return () => clearInterval(t) }, [])
+  if (!iso) return null
+  const ms = new Date(iso.length === 10 ? `${iso}T00:00` : iso).getTime() - Date.now()
+  if (ms <= 0) return { text: 'now', past: true, mins: 0 }
+  const mins = Math.round(ms / 60000)
+  if (mins < 60) return { text: `${mins}m`, past: false, mins }
+  if (mins < 24 * 60) return { text: `${Math.floor(mins / 60)}h ${mins % 60}m`, past: false, mins }
+  const d = Math.round(mins / 1440)
+  return { text: `${d}d`, past: false, mins }
+}
 
 // ---------------------------------------------------------------- Layout
 export const Card = ({ className, children, ...p }: React.HTMLAttributes<HTMLDivElement>) =>
@@ -36,7 +86,7 @@ export const Card = ({ className, children, ...p }: React.HTMLAttributes<HTMLDiv
 export const CardHeader = ({ title, sub, action, icon: Icon }: { title: React.ReactNode; sub?: React.ReactNode; action?: React.ReactNode; icon?: any }) => (
   <div className="flex items-start justify-between gap-3 border-b border-line px-4 py-3 sm:px-5">
     <div className="flex min-w-0 items-center gap-2.5">
-      {Icon && <Icon className="size-4 shrink-0 text-saffron" />}
+      {Icon && <Icon className="size-4 shrink-0 text-brand" />}
       <div className="min-w-0"><h3 className="truncate font-sans text-[15px] font-semibold">{title}</h3>{sub && <p className="truncate text-xs text-mute">{sub}</p>}</div>
     </div>
     {action && <div className="flex shrink-0 items-center gap-2">{action}</div>}
@@ -46,7 +96,7 @@ export function PageHeader({ title, sub, actions, eyebrow }: { title: React.Reac
   return (
     <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0">
-        {eyebrow && <div className="mb-1 text-xs font-semibold uppercase tracking-[0.14em] text-saffron">{eyebrow}</div>}
+        {eyebrow && <div className="mb-1 text-sm text-mute">{eyebrow}</div>}
         <h1 className="text-[26px] leading-tight font-medium sm:text-3xl">{title}</h1>
         {sub && <p className="mt-1 text-sm text-mute">{sub}</p>}
       </div>
@@ -58,8 +108,8 @@ export function PageHeader({ title, sub, actions, eyebrow }: { title: React.Reac
 // ---------------------------------------------------------------- Badge
 type Tone = 'neutral' | 'saffron' | 'sage' | 'rose' | 'amber' | 'sky' | 'ink'
 const TONE: Record<Tone, string> = {
-  neutral: 'bg-sand text-ink-2', saffron: 'bg-saffron-50 text-saffron', sage: 'bg-sage-50 text-sage', rose: 'bg-rose-50 text-rose',
-  amber: 'bg-amber-50 text-amber', sky: 'bg-sky-50 text-sky', ink: 'bg-ink text-paper',
+  neutral: 'bg-wash text-ink-2', saffron: 'bg-brand-50 text-brand', sage: 'bg-ok-50 text-ok', rose: 'bg-bad-50 text-bad',
+  amber: 'bg-warn-50 text-warn', sky: 'bg-info-50 text-info', ink: 'bg-ink text-canvas',
 }
 export const Badge = ({ tone = 'neutral', children, className, dot }: { tone?: Tone; children: React.ReactNode; className?: string; dot?: boolean }) => (
   <span className={cx('inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11.5px] font-semibold whitespace-nowrap', TONE[tone], className)}>
@@ -78,25 +128,25 @@ export const Status = ({ s, label }: { s?: string | null; label?: string }) => s
 export function Stat({ label, value, sub, tone, icon: Icon, onClick }: { label: string; value: React.ReactNode; sub?: React.ReactNode; tone?: 'rose' | 'sage' | 'amber'; icon?: any; onClick?: () => void }) {
   const C = onClick ? 'button' : 'div'
   return (
-    <C onClick={onClick} className={cx('min-w-0 rounded-2xl border border-line bg-card p-4 text-left shadow-card', onClick && 'hover:border-saffron/40')}>
+    <C onClick={onClick} className={cx('min-w-0 rounded-2xl border border-line bg-card p-4 text-left shadow-card', onClick && 'hover:border-brand/40')}>
       <div className="flex items-center gap-1.5 text-xs font-medium text-mute">{Icon && <Icon className="size-3.5" />}{label}</div>
-      <div className={cx('mt-1.5 text-2xl font-semibold tabular', tone === 'rose' && 'text-rose', tone === 'sage' && 'text-sage', tone === 'amber' && 'text-amber')}>{value}</div>
+      <div className={cx('mt-1.5 text-2xl font-semibold tabular', tone === 'rose' && 'text-bad', tone === 'sage' && 'text-ok', tone === 'amber' && 'text-warn')}>{value}</div>
       {sub && <div className="mt-0.5 truncate text-xs text-mute">{sub}</div>}
     </C>
   )
 }
 export function Progress({ value, max = 100, tone = 'saffron', className }: { value: number; max?: number; tone?: 'saffron' | 'sage' | 'rose' | 'amber' | 'sky'; className?: string }) {
   const pct = Math.max(0, Math.min(100, max ? (value / max) * 100 : 0))
-  const c = { saffron: 'bg-saffron', sage: 'bg-sage', rose: 'bg-rose', amber: 'bg-marigold', sky: 'bg-sky' }[tone]
-  return <div className={cx('h-1.5 overflow-hidden rounded-full bg-sand', className)}><div className={cx('h-full rounded-full transition-all', c)} style={{ width: `${pct}%` }} /></div>
+  const c = { saffron: 'bg-brand', sage: 'bg-ok', rose: 'bg-bad', amber: 'bg-haldi', sky: 'bg-info' }[tone]
+  return <div className={cx('h-1.5 overflow-hidden rounded-full bg-wash', className)}><div className={cx('h-full rounded-full transition-all', c)} style={{ width: `${pct}%` }} /></div>
 }
 export function HealthRing({ score, size = 56 }: { score: number; size?: number }) {
   const r = size / 2 - 5, c = 2 * Math.PI * r
-  const color = score >= 80 ? 'var(--color-sage)' : score >= 60 ? 'var(--color-marigold)' : 'var(--color-rose)'
+  const color = score >= 80 ? 'var(--color-ok)' : score >= 60 ? 'var(--color-haldi)' : 'var(--color-bad)'
   return (
     <div className="relative shrink-0" style={{ width: size, height: size }} role="img" aria-label={`Health score ${score} of 100`}>
       <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={r} stroke="var(--color-sand)" strokeWidth="5" fill="none" />
+        <circle cx={size / 2} cy={size / 2} r={r} stroke="var(--color-wash)" strokeWidth="5" fill="none" />
         <circle cx={size / 2} cy={size / 2} r={r} stroke={color} strokeWidth="5" fill="none" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - score / 100)} />
       </svg>
       <div className="absolute inset-0 grid place-items-center text-sm font-bold tabular">{score}</div>
@@ -104,7 +154,7 @@ export function HealthRing({ score, size = 56 }: { score: number; size?: number 
   )
 }
 export const Avatar = ({ name, size = 32, tone = 'sand' }: { name?: string; size?: number; tone?: 'sand' | 'ink' | 'saffron' }) => (
-  <div className={cx('grid shrink-0 place-items-center rounded-full font-semibold', tone === 'ink' ? 'bg-ink text-paper' : tone === 'saffron' ? 'bg-saffron-50 text-saffron' : 'bg-sand text-ink-2')} style={{ width: size, height: size, fontSize: size * 0.38 }}>{initials(name)}</div>
+  <div className={cx('grid shrink-0 place-items-center rounded-full font-semibold', tone === 'ink' ? 'bg-ink text-canvas' : tone === 'saffron' ? 'bg-brand-50 text-brand' : 'bg-wash text-ink-2')} style={{ width: size, height: size, fontSize: size * 0.38 }}>{initials(name)}</div>
 )
 
 // ---------------------------------------------------------------- Feedback
@@ -113,7 +163,7 @@ export const Loading = ({ label = 'Loading…' }: { label?: string }) => <div cl
 export function Empty({ icon: Icon = Inbox, title, sub, action }: { icon?: any; title: string; sub?: React.ReactNode; action?: React.ReactNode }) {
   return (
     <div className="flex flex-col items-center justify-center px-6 py-12 text-center">
-      <div className="mb-3 grid size-11 place-items-center rounded-2xl bg-sand"><Icon className="size-5 text-mute" /></div>
+      <div className="mb-3 grid size-11 place-items-center rounded-2xl bg-wash"><Icon className="size-5 text-mute" /></div>
       <div className="font-semibold">{title}</div>
       {sub && <div className="mt-1 max-w-sm text-sm text-mute">{sub}</div>}
       {action && <div className="mt-4">{action}</div>}
@@ -123,7 +173,7 @@ export function Empty({ icon: Icon = Inbox, title, sub, action }: { icon?: any; 
 export function ErrorBox({ error, retry }: { error: any; retry?: () => void }) {
   if (!error) return null
   return (
-    <div className="flex items-start gap-3 rounded-xl border border-rose/20 bg-rose-50 p-3 text-sm text-rose">
+    <div className="flex items-start gap-3 rounded-xl border border-bad/20 bg-bad-50 p-3 text-sm text-bad">
       <AlertTriangle className="mt-0.5 size-4 shrink-0" />
       <div className="flex-1">{error.message || String(error)}{error.detail?.errors && <ul className="mt-1 list-disc pl-4">{error.detail.errors.map((e: string) => <li key={e}>{e}</li>)}</ul>}</div>
       {retry && <button className="font-semibold underline" onClick={retry}>Retry</button>}
@@ -131,7 +181,7 @@ export function ErrorBox({ error, retry }: { error: any; retry?: () => void }) {
   )
 }
 export function Callout({ tone = 'amber', icon: Icon = Info, children, action }: { tone?: 'amber' | 'rose' | 'sky' | 'sage'; icon?: any; children: React.ReactNode; action?: React.ReactNode }) {
-  const t = { amber: 'bg-amber-50 text-amber border-amber/20', rose: 'bg-rose-50 text-rose border-rose/20', sky: 'bg-sky-50 text-sky border-sky/20', sage: 'bg-sage-50 text-sage border-sage/20' }[tone]
+  const t = { amber: 'bg-warn-50 text-warn border-warn/20', rose: 'bg-bad-50 text-bad border-bad/20', sky: 'bg-info-50 text-info border-info/20', sage: 'bg-ok-50 text-ok border-ok/20' }[tone]
   return <div className={cx('flex items-start gap-3 rounded-xl border p-3 text-sm', t)}><Icon className="mt-0.5 size-4 shrink-0" /><div className="flex-1 text-ink-2">{children}</div>{action}</div>
 }
 
@@ -151,8 +201,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       {children}
       <div className="pointer-events-none fixed inset-x-0 bottom-24 z-[100] flex flex-col items-center gap-2 px-4 lg:bottom-6" aria-live="polite">
         {items.map(t => (
-          <div key={t.id} className="anim-pop pointer-events-auto flex max-w-md items-center gap-2.5 rounded-xl bg-ink px-4 py-3 text-sm text-paper shadow-pop">
-            {t.tone === 'error' ? <AlertTriangle className="size-4 text-marigold" /> : t.tone === 'info' ? <Info className="size-4 text-marigold" /> : <CheckCircle2 className="size-4 text-[#8fd1a9]" />}
+          <div key={t.id} className="anim-pop pointer-events-auto flex max-w-md items-center gap-2.5 rounded-xl bg-ink px-4 py-3 text-sm text-canvas shadow-pop">
+            {t.tone === 'error' ? <AlertTriangle className="size-4 text-haldi" /> : t.tone === 'info' ? <Info className="size-4 text-haldi" /> : <CheckCircle2 className="size-4 text-[#8fd1a9]" />}
             {t.text}
           </div>
         ))}
@@ -216,13 +266,13 @@ export function Confirm({ open, onClose, onConfirm, title, body, confirmLabel = 
 // ---------------------------------------------------------------- Forms
 export const Label = ({ children, hint }: { children: React.ReactNode; hint?: React.ReactNode }) =>
   <span className="mb-1.5 flex items-baseline justify-between gap-2 text-[13px] font-semibold text-ink-2">{children}{hint && <span className="font-normal text-mute">{hint}</span>}</span>
-const fieldCls = 'w-full rounded-xl border border-line bg-card px-3 text-[14px] text-ink placeholder:text-mute/70 focus:border-saffron focus:ring-2 focus:ring-saffron/15 focus:outline-none disabled:bg-sand'
+const fieldCls = 'w-full rounded-xl border border-line bg-card px-3 text-[14px] text-ink placeholder:text-mute/70 focus:border-brand focus:ring-2 focus:ring-brand/15 focus:outline-none disabled:bg-wash'
 export const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement> & { label?: React.ReactNode; hint?: React.ReactNode; error?: string }>(
   ({ label, hint, error, className, ...p }, ref) => (
     <label className={cx('block', className)}>
       {label && <Label hint={hint}>{label}</Label>}
-      <input ref={ref} {...p} className={cx(fieldCls, 'h-10', error && 'border-rose')} />
-      {error && <span className="mt-1 block text-xs text-rose">{error}</span>}
+      <input ref={ref} {...p} className={cx(fieldCls, 'h-10', error && 'border-bad')} />
+      {error && <span className="mt-1 block text-xs text-bad">{error}</span>}
     </label>
   ))
 export const Textarea = ({ label, hint, className, ...p }: React.TextareaHTMLAttributes<HTMLTextAreaElement> & { label?: React.ReactNode; hint?: React.ReactNode }) => (
@@ -242,23 +292,23 @@ export function Select({ label, hint, options, className, placeholder, ...p }: R
 export const Toggle = ({ checked, onChange, label, sub, disabled }: { checked: boolean; onChange: (v: boolean) => void; label?: React.ReactNode; sub?: React.ReactNode; disabled?: boolean }) => (
   <label className={cx('flex cursor-pointer items-start justify-between gap-4 py-1.5', disabled && 'opacity-50')}>
     {label && <span><span className="block text-sm font-medium">{label}</span>{sub && <span className="block text-xs text-mute">{sub}</span>}</span>}
-    <button type="button" role="switch" aria-checked={checked} disabled={disabled} onClick={() => onChange(!checked)} className={cx('relative mt-0.5 h-6 w-10 shrink-0 rounded-full transition-colors', checked ? 'bg-saffron' : 'bg-line')}>
+    <button type="button" role="switch" aria-checked={checked} disabled={disabled} onClick={() => onChange(!checked)} className={cx('relative mt-0.5 h-6 w-10 shrink-0 rounded-full transition-colors', checked ? 'bg-brand' : 'bg-line')}>
       <span className={cx('absolute top-0.5 size-5 rounded-full bg-white shadow transition-transform', checked ? 'translate-x-[18px]' : 'translate-x-0.5')} />
     </button>
   </label>
 )
 export const Check = ({ checked, onChange, label, className }: { checked: boolean; onChange: (v: boolean) => void; label?: React.ReactNode; className?: string }) => (
   <label className={cx('inline-flex cursor-pointer items-center gap-2 text-sm', className)}>
-    <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} className="size-4 rounded border-line accent-[#b4532a]" />{label}
+    <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} className="size-4 rounded border-line accent-[#0E6B66]" />{label}
   </label>
 )
 export function Segmented<T extends string>({ value, onChange, options, className }: { value: T; onChange: (v: T) => void; options: { value: T; label: React.ReactNode; count?: number }[]; className?: string }) {
   return (
-    <div className={cx('scroll-x inline-flex max-w-full gap-1 rounded-xl bg-sand p-1', className)} role="tablist">
+    <div className={cx('scroll-x inline-flex max-w-full gap-1 rounded-xl bg-wash p-1', className)} role="tablist">
       {options.map(o => (
         <button key={o.value} role="tab" aria-selected={value === o.value} onClick={() => onChange(o.value)}
           className={cx('flex h-8 items-center gap-1.5 rounded-lg px-3 text-[13px] font-semibold whitespace-nowrap transition-colors', value === o.value ? 'bg-card text-ink shadow-card' : 'text-mute hover:text-ink')}>
-          {o.label}{o.count !== undefined && o.count > 0 && <span className={cx('rounded-full px-1.5 text-[11px]', value === o.value ? 'bg-saffron-50 text-saffron' : 'bg-line text-ink-2')}>{o.count}</span>}
+          {o.label}{o.count !== undefined && o.count > 0 && <span className={cx('rounded-full px-1.5 text-[11px]', value === o.value ? 'bg-brand-50 text-brand' : 'bg-line text-ink-2')}>{o.count}</span>}
         </button>
       ))}
     </div>
@@ -268,7 +318,7 @@ export function Segmented<T extends string>({ value, onChange, options, classNam
 // ---------------------------------------------------------------- Lists
 export function Row({ children, onClick, className }: { children: React.ReactNode; onClick?: () => void; className?: string }) {
   const C = onClick ? 'button' : 'div'
-  return <C onClick={onClick} className={cx('flex w-full items-center gap-3 px-4 py-3 text-left sm:px-5', onClick && 'hover:bg-paper', className)}>{children}{onClick && <ChevronRight className="size-4 shrink-0 text-mute" />}</C>
+  return <C onClick={onClick} className={cx('flex w-full items-center gap-3 px-4 py-3 text-left sm:px-5', onClick && 'hover:bg-canvas', className)}>{children}{onClick && <ChevronRight className="size-4 shrink-0 text-mute" />}</C>
 }
 export const Divided = ({ children, className }: { children: React.ReactNode; className?: string }) => <div className={cx('divide-y divide-line', className)}>{children}</div>
 
@@ -288,13 +338,13 @@ export function DataTable({ rows, cols, empty, onRow, rowKey, selectable, select
       <div className="hidden md:block">
         <table className="w-full text-sm">
           <thead><tr className="border-b border-line text-left text-xs font-semibold text-mute">
-            {selectable && <th className="w-10 px-4 py-2.5"><input type="checkbox" aria-label="Select all" className="accent-[#b4532a]" checked={rows.length > 0 && rows.every(r => selected?.has(rowKey(r)))} onChange={e => onSelect?.(new Set(e.target.checked ? rows.map(rowKey) : []))} /></th>}
+            {selectable && <th className="w-10 px-4 py-2.5"><input type="checkbox" aria-label="Select all" className="accent-[#0E6B66]" checked={rows.length > 0 && rows.every(r => selected?.has(rowKey(r)))} onChange={e => onSelect?.(new Set(e.target.checked ? rows.map(rowKey) : []))} /></th>}
             {cols.map(c => <th key={c.key} className={cx('px-4 py-2.5 font-semibold', c.className)}>{c.label}</th>)}
           </tr></thead>
           <tbody className="divide-y divide-line">
             {rows.map(r => (
-              <tr key={rowKey(r)} onClick={onRow ? () => onRow(r) : undefined} className={cx(onRow && 'cursor-pointer hover:bg-paper', selected?.has(rowKey(r)) && 'bg-saffron-50/40')}>
-                {selectable && <td className="px-4 py-2.5" onClick={e => e.stopPropagation()}><input type="checkbox" aria-label="Select row" className="accent-[#b4532a]" checked={!!selected?.has(rowKey(r))} onChange={() => toggle(rowKey(r))} /></td>}
+              <tr key={rowKey(r)} onClick={onRow ? () => onRow(r) : undefined} className={cx(onRow && 'cursor-pointer hover:bg-canvas', selected?.has(rowKey(r)) && 'bg-brand-50/40')}>
+                {selectable && <td className="px-4 py-2.5" onClick={e => e.stopPropagation()}><input type="checkbox" aria-label="Select row" className="accent-[#0E6B66]" checked={!!selected?.has(rowKey(r))} onChange={() => toggle(rowKey(r))} /></td>}
                 {cols.map(c => <td key={c.key} className={cx('px-4 py-2.5 align-middle', c.className)}>{c.render(r)}</td>)}
               </tr>
             ))}
@@ -303,8 +353,8 @@ export function DataTable({ rows, cols, empty, onRow, rowKey, selectable, select
       </div>
       <div className="divide-y divide-line md:hidden">
         {rows.map(r => (
-          <div key={rowKey(r)} onClick={onRow ? () => onRow(r) : undefined} className={cx('flex gap-3 px-4 py-3', onRow && 'active:bg-paper')}>
-            {selectable && <input type="checkbox" aria-label="Select row" className="mt-1 accent-[#b4532a]" checked={!!selected?.has(rowKey(r))} onClick={e => e.stopPropagation()} onChange={() => toggle(rowKey(r))} />}
+          <div key={rowKey(r)} onClick={onRow ? () => onRow(r) : undefined} className={cx('flex gap-3 px-4 py-3', onRow && 'active:bg-canvas')}>
+            {selectable && <input type="checkbox" aria-label="Select row" className="mt-1 accent-[#0E6B66]" checked={!!selected?.has(rowKey(r))} onClick={e => e.stopPropagation()} onChange={() => toggle(rowKey(r))} />}
             <div className="min-w-0 flex-1">
               <div className="font-semibold">{title.render(r)}</div>
               {sub.map(c => <div key={c.key} className="text-xs text-mute">{c.render(r)}</div>)}
@@ -321,7 +371,7 @@ export function Grid({ children, cols = 4, className }: { children: React.ReactN
   const c = { 2: 'grid-cols-2', 3: 'grid-cols-2 lg:grid-cols-3', 4: 'grid-cols-2 lg:grid-cols-4', 5: 'grid-cols-2 md:grid-cols-3 lg:grid-cols-5', 6: 'grid-cols-2 md:grid-cols-3 xl:grid-cols-6' }[cols]
   return <div className={cx('grid gap-3', c, className)}>{children}</div>
 }
-export const Kbd = ({ children }: { children: React.ReactNode }) => <kbd className="rounded border border-line bg-paper px-1.5 py-0.5 text-[11px] font-semibold text-mute">{children}</kbd>
+export const Kbd = ({ children }: { children: React.ReactNode }) => <kbd className="rounded border border-line bg-canvas px-1.5 py-0.5 text-[11px] font-semibold text-mute">{children}</kbd>
 export function Menu({ trigger, items }: { trigger: React.ReactNode; items: { label: string; onClick: () => void; danger?: boolean; icon?: any }[] }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -330,7 +380,7 @@ export function Menu({ trigger, items }: { trigger: React.ReactNode; items: { la
     <div className="relative" ref={ref}>
       <div onClick={() => setOpen(!open)}>{trigger}</div>
       {open && <div className="anim-pop absolute right-0 z-50 mt-1 min-w-48 rounded-xl border border-line bg-card p-1 shadow-pop">
-        {items.map(i => <button key={i.label} onClick={() => { setOpen(false); i.onClick() }} className={cx('flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm hover:bg-sand', i.danger && 'text-rose')}>{i.icon && <i.icon className="size-4" />}{i.label}</button>)}
+        {items.map(i => <button key={i.label} onClick={() => { setOpen(false); i.onClick() }} className={cx('flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm hover:bg-wash', i.danger && 'text-bad')}>{i.icon && <i.icon className="size-4" />}{i.label}</button>)}
       </div>}
     </div>
   )

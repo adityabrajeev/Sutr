@@ -43,7 +43,7 @@ export function Overview() {
             {h.queue.length ? <Divided>
               {h.queue.map((q: any, i: number) => (
                 <Row key={i} onClick={() => nav(q.module)}>
-                  <span className={cx('size-2.5 shrink-0 rounded-full', q.severity === 'critical' ? 'bg-rose' : q.severity === 'warning' ? 'bg-marigold' : 'bg-sky')} />
+                  <span className={cx('size-2.5 shrink-0 rounded-full', q.severity === 'critical' ? 'bg-bad' : q.severity === 'warning' ? 'bg-haldi' : 'bg-info')} />
                   <div className="min-w-0 flex-1"><div className="text-sm font-semibold">{q.title}</div><div className="text-xs text-mute">{DOMAINS[q.domain]?.label || titleCase(q.domain)}{q.next ? ` · Next: ${q.next}` : ''}</div></div>
                 </Row>
               ))}
@@ -63,11 +63,11 @@ export function Overview() {
         </div>
         <div className="space-y-5">
           <Card>
-            <CardHeader title="Functions" icon={Sparkles} action={<Link to="setup" className="text-xs font-semibold text-saffron">Edit</Link>} />
+            <CardHeader title="Functions" icon={Sparkles} action={<Link to="setup" className="text-xs font-semibold text-brand">Edit</Link>} />
             <Divided>
               {w.functions.map((f: any) => (
                 <div key={f.id} className="flex items-center gap-3 px-4 py-3 sm:px-5">
-                  <div className="w-11 shrink-0 text-center"><div className="text-[11px] font-semibold uppercase text-mute">{date(f.date, { month: 'short' })}</div><div className="text-lg font-semibold leading-none">{date(f.date, { day: 'numeric' })}</div></div>
+                  <div className="w-11 shrink-0 text-center"><div className="text-[11px] font-semibold text-mute">{date(f.date, { month: 'short' })}</div><div className="text-lg font-semibold leading-none">{date(f.date, { day: 'numeric' })}</div></div>
                   <div className="min-w-0 flex-1"><div className="truncate text-sm font-semibold">{f.name}</div><div className="truncate text-xs text-mute">{hhmm(f.start_time)} · {f.venue}{f.dress_code ? ` · ${f.dress_code}` : ''}</div></div>
                   {f.live_status !== 'upcoming' && <Status s={f.live_status} />}
                 </div>
@@ -82,13 +82,13 @@ export function Overview() {
                   <Avatar name={h.name} />
                   <div className="min-w-0 flex-1"><div className="truncate text-sm font-semibold">{h.name}</div><div className="truncate text-xs text-mute">{h.relation} · {h.phone}</div></div>
                   <Button size="sm" variant="ghost" icon={Copy} onClick={() => copy(h.link, toast)}>Link</Button>
-                  <a href={h.link} target="_blank" className="grid size-8 place-items-center rounded-lg hover:bg-sand" aria-label="Open host portal"><ExternalLink className="size-4 text-mute" /></a>
+                  <a href={h.link} target="_blank" className="grid size-8 place-items-center rounded-lg hover:bg-wash" aria-label="Open host portal"><ExternalLink className="size-4 text-mute" /></a>
                 </div>
               ))}
             </Divided>
           </Card>
           <Card>
-            <CardHeader title="Team" icon={Users} action={me.can.team && <Link to="setup" className="text-xs font-semibold text-saffron">Manage</Link>} />
+            <CardHeader title="Team" icon={Users} action={me.can.team && <Link to="setup" className="text-xs font-semibold text-brand">Manage</Link>} />
             <div className="flex flex-wrap gap-2 p-4">{w.team.map((t: any) => <div key={t.id} className="flex items-center gap-2 rounded-full border border-line py-1 pr-3 pl-1"><Avatar name={t.name} size={26} /><span className="text-xs"><b>{t.name.split(' ')[0]}</b> · {(t.responsibilities || []).join(', ') || t.title}</span></div>)}</div>
           </Card>
         </div>
@@ -159,12 +159,12 @@ export function Guests() {
       {missing > 0 && <div className="mb-4"><Callout tone="amber" action={<button className="text-sm font-semibold underline" onClick={() => setFilter('missing')}>Review</button>}>{plural(missing, 'guest')} missing operational info (phone, function access or stay dates). They're in the attention queue.</Callout></div>}
       <Card>
         <div className="flex flex-col gap-2 border-b border-line p-3 sm:flex-row sm:items-center">
-          <div className="relative flex-1"><Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-mute" /><input value={q} onChange={e => setQ(e.target.value)} placeholder="Search name, phone, household" aria-label="Search guests" className="h-10 w-full rounded-xl border border-line pr-3 pl-9 text-sm focus:border-saffron focus:outline-none" /></div>
+          <div className="relative flex-1"><Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-mute" /><input value={q} onChange={e => setQ(e.target.value)} placeholder="Search name, phone, household" aria-label="Search guests" className="h-10 w-full rounded-xl border border-line pr-3 pl-9 text-sm focus:border-brand focus:outline-none" /></div>
           <Segmented value={filter} onChange={setFilter} options={[{ value: 'all', label: 'All' }, { value: 'pending', label: 'RSVP pending' }, { value: 'attending', label: 'Attending' }, { value: 'vip', label: 'VIP' }, { value: 'stay', label: 'Needs stay' }, { value: 'missing', label: 'Missing info', count: missing }]} />
           <Select aria-label="Side" value={side} onChange={e => setSide(e.target.value)} options={[{ value: 'bride', label: 'Bride side' }, { value: 'groom', label: 'Groom side' }]} placeholder="Both sides" className="sm:w-36" />
         </div>
         {sel.size > 0 && (
-          <div className="flex flex-wrap items-center gap-2 border-b border-line bg-saffron-50/50 px-4 py-2 text-sm">
+          <div className="flex flex-wrap items-center gap-2 border-b border-line bg-brand-50/50 px-4 py-2 text-sm">
             <b>{sel.size} selected</b>
             <Button size="sm" onClick={() => setModal('bulk')}>Bulk edit</Button>
             <Button size="sm" variant="ghost" onClick={() => setSel(new Set())}>Clear</Button>
@@ -173,7 +173,7 @@ export function Guests() {
         <DataTable rows={list} rowKey={g => g.id} selectable selected={sel} onSelect={setSel} onRow={g => setEdit(g)}
           empty={<Empty icon={Users} title={data.length ? 'No guests match' : 'No guests yet'} sub={data.length ? 'Try a different filter.' : 'Import a CSV, copy from a past wedding, or add guests one by one.'} />}
           cols={[
-            { key: 'name', label: 'Guest', mobile: 'title', render: g => <span className="flex items-center gap-2 font-semibold">{g.name}{g.vip ? <Crown className="size-3.5 text-marigold" aria-label="VIP" /> : null}{g.accessibility ? <Accessibility className="size-3.5 text-sky" aria-label={g.accessibility} /> : null}{g.tags?.includes('host-added') && <Badge tone="sky">host added</Badge>}{g.tags?.includes('walk-in') && <Badge>walk-in</Badge>}</span> },
+            { key: 'name', label: 'Guest', mobile: 'title', render: g => <span className="flex items-center gap-2 font-semibold">{g.name}{g.vip ? <Crown className="size-3.5 text-haldi" aria-label="VIP" /> : null}{g.accessibility ? <Accessibility className="size-3.5 text-info" aria-label={g.accessibility} /> : null}{g.tags?.includes('host-added') && <Badge tone="sky">host added</Badge>}{g.tags?.includes('walk-in') && <Badge>walk-in</Badge>}</span> },
             { key: 'household', label: 'Household', mobile: 'sub', render: g => <span className="text-ink-2">{g.household || '—'}{g.side ? <span className="text-mute"> · {g.side}</span> : ''}</span> },
             { key: 'phone', label: 'Phone', render: g => g.phone ? <span className="tabular">{g.phone}</span> : <span className="text-mute">{g.age_group === 'child' ? 'child' : 'missing'}</span> },
             { key: 'rsvp', label: 'RSVP', render: g => { const a = g.rsvps.filter((r: any) => r.status === 'attending').length, p = g.rsvps.filter((r: any) => r.status === 'pending').length; return p ? <Status s="pending" label={`${p} pending`} /> : a ? <Status s="attending" label={`${a}/${g.rsvps.length}`} /> : g.rsvps.length ? <Status s="declined" /> : <Badge tone="rose">no functions</Badge> } },
@@ -219,7 +219,7 @@ function GuestModal({ open, guest, functions, onClose, onSaved, canDelete }: any
   return (
     <Modal open={open} onClose={onClose} title={guest ? guest.name : 'Add guest'} sub={guest ? `Code ${guest.code} · ${guest.household || 'no household'}` : 'Duplicates are checked automatically'} size="lg"
       footer={<>
-        {guest && canDelete && <Button variant="ghost" className="mr-auto text-rose" icon={Trash2} onClick={() => setConfirmDel(true)}>Delete</Button>}
+        {guest && canDelete && <Button variant="ghost" className="mr-auto text-bad" icon={Trash2} onClick={() => setConfirmDel(true)}>Delete</Button>}
         {guest && <Button icon={Copy} onClick={link}>Guest link</Button>}
         <Button onClick={onClose}>Cancel</Button>
         {dup ? <Button variant="danger" onClick={() => save(true)}>Save anyway</Button> : <Button variant="primary" loading={busy === 'save'} onClick={() => save()}>Save</Button>}
@@ -269,8 +269,8 @@ function ImportModal({ open, onClose, onDone }: any) {
       footer={preview ? <><Button onClick={() => { setPreview(null); setRaw(null) }}>Start over</Button><Button variant="primary" loading={busy === 'commit'} disabled={!preview.valid} onClick={commit}>Import {preview.valid} valid row(s)</Button></> : undefined}>
       {!preview ? (
         <div className="space-y-4">
-          <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-line p-10 text-center hover:bg-paper">
-            <Upload className="size-6 text-saffron" /><span className="font-semibold">Upload a CSV</span><span className="text-sm text-mute">Export from Excel or Google Sheets as .csv</span>
+          <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-line p-10 text-center hover:bg-canvas">
+            <Upload className="size-6 text-brand" /><span className="font-semibold">Upload a CSV</span><span className="text-sm text-mute">Export from Excel or Google Sheets as .csv</span>
             <input type="file" accept=".csv,.txt,.xlsx,.xls" className="sr-only" onChange={e => onFile(e.target.files?.[0])} />
           </label>
           <div className="text-center text-sm text-mute">or</div>
@@ -293,8 +293,8 @@ function ImportModal({ open, onClose, onDone }: any) {
             </Card>
           )}
           <div className="scroll-x rounded-xl border border-line">
-            <table className="w-full text-xs"><thead><tr className="bg-paper text-left text-mute"><th className="px-3 py-2">Row</th><th className="px-3 py-2">Name</th><th className="px-3 py-2">Phone</th><th className="px-3 py-2">Side</th><th className="px-3 py-2">Household</th><th className="px-3 py-2">Status</th></tr></thead>
-              <tbody className="divide-y divide-line">{preview.rows.map((r: any) => <tr key={r._row} className={r._errors.length ? 'bg-rose-50/50' : ''}><td className="px-3 py-1.5">{r._row}</td><td className="px-3 py-1.5 font-semibold">{r.name || '—'}</td><td className="px-3 py-1.5">{r.phone}</td><td className="px-3 py-1.5">{r.side}</td><td className="px-3 py-1.5">{r.household}</td><td className="px-3 py-1.5">{r._errors.length ? <span className="text-rose">{r._errors.join('; ')}</span> : <span className="text-sage">OK</span>}</td></tr>)}</tbody>
+            <table className="w-full text-xs"><thead><tr className="bg-canvas text-left text-mute"><th className="px-3 py-2">Row</th><th className="px-3 py-2">Name</th><th className="px-3 py-2">Phone</th><th className="px-3 py-2">Side</th><th className="px-3 py-2">Household</th><th className="px-3 py-2">Status</th></tr></thead>
+              <tbody className="divide-y divide-line">{preview.rows.map((r: any) => <tr key={r._row} className={r._errors.length ? 'bg-bad-50/50' : ''}><td className="px-3 py-1.5">{r._row}</td><td className="px-3 py-1.5 font-semibold">{r.name || '—'}</td><td className="px-3 py-1.5">{r.phone}</td><td className="px-3 py-1.5">{r.side}</td><td className="px-3 py-1.5">{r.household}</td><td className="px-3 py-1.5">{r._errors.length ? <span className="text-bad">{r._errors.join('; ')}</span> : <span className="text-ok">OK</span>}</td></tr>)}</tbody>
             </table>
           </div>
         </div>
@@ -313,7 +313,7 @@ function HouseholdModal({ open, onClose, onDone }: any) {
     <Modal open={open} onClose={onClose} title="Suggested households" sub="Grouped by shared phone numbers and surname + side" size="lg"
       footer={<><Button onClick={onClose}>Cancel</Button><Button variant="primary" disabled={!pick.size} loading={busy === 'a'} onClick={() => run('a', () => post(`/weddings/${wid}/households/apply`, { groups: data!.filter((_, i) => pick.has(i)) }), 'Households created').then(onDone)}>Create {pick.size} household(s)</Button></>}>
       {!data ? <Loading /> : !data.length ? <Empty title="No suggestions" sub="Every guest already belongs to a household, or nobody shares a phone or surname." /> : (
-        <Divided>{data.map((g, i) => <label key={i} className="flex cursor-pointer items-start gap-3 py-3"><input type="checkbox" className="mt-1 accent-[#b4532a]" checked={pick.has(i)} onChange={() => { const s = new Set(pick); s.has(i) ? s.delete(i) : s.add(i); setPick(s) }} /><span><span className="block font-semibold">{g.name} <span className="font-normal text-mute">· {g.side}</span></span><span className="text-sm text-ink-2">{g.names.join(', ')}</span></span></label>)}</Divided>
+        <Divided>{data.map((g, i) => <label key={i} className="flex cursor-pointer items-start gap-3 py-3"><input type="checkbox" className="mt-1 accent-[#0E6B66]" checked={pick.has(i)} onChange={() => { const s = new Set(pick); s.has(i) ? s.delete(i) : s.add(i); setPick(s) }} /><span><span className="block font-semibold">{g.name} <span className="font-normal text-mute">· {g.side}</span></span><span className="text-sm text-ink-2">{g.names.join(', ')}</span></span></label>)}</Divided>
       )}
     </Modal>
   )
@@ -328,7 +328,7 @@ function DupesModal({ open, onClose, onDone }: any) {
       {!data ? <Loading /> : !data.length ? <Empty icon={CheckCircle2} title="No duplicates found" /> : (
         <Divided>{data.map((d, i) => (
           <div key={i} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center">
-            <div className="flex-1 text-sm"><b>{d.a.name}</b> <span className="text-mute">{d.a.phone} · {d.a.side}</span><br /><b>{d.b.name}</b> <span className="text-mute">{d.b.phone} · {d.b.side}</span><div className="text-xs text-amber">{d.reason}</div></div>
+            <div className="flex-1 text-sm"><b>{d.a.name}</b> <span className="text-mute">{d.a.phone} · {d.a.side}</span><br /><b>{d.b.name}</b> <span className="text-mute">{d.b.phone} · {d.b.side}</span><div className="text-xs text-warn">{d.reason}</div></div>
             <div className="flex gap-2"><Button size="sm" onClick={() => run('m', () => post(`/weddings/${wid}/guests/merge`, { keep_id: d.a.id, merge_id: d.b.id }), 'Merged').then(() => { reload(); onDone() })}>Keep first</Button><Button size="sm" onClick={() => run('m', () => post(`/weddings/${wid}/guests/merge`, { keep_id: d.b.id, merge_id: d.a.id }), 'Merged').then(() => { reload(); onDone() })}>Keep second</Button></div>
           </div>
         ))}</Divided>
@@ -410,7 +410,7 @@ export function Rsvp() {
             <div className="truncate text-sm font-semibold">{f.name}</div><div className="text-xs text-mute">{date(f.date)} · {hhmm(f.start_time)}</div>
             <div className="mt-3 text-3xl font-semibold tabular">{f.headcount}<span className="ml-1 text-sm font-medium text-mute">heads</span></div>
             <Progress className="mt-2" value={f.attending + f.declined} max={f.invited} tone="sage" />
-            <div className="mt-2 flex justify-between text-[11px] text-mute"><span className="text-sage">{f.attending} yes</span><span className="text-amber">{f.pending} pending</span><span className="text-rose">{f.declined} no</span></div>
+            <div className="mt-2 flex justify-between text-[11px] text-mute"><span className="text-ok">{f.attending} yes</span><span className="text-warn">{f.pending} pending</span><span className="text-bad">{f.declined} no</span></div>
           </Card>
         ))}
       </div>
@@ -426,7 +426,7 @@ export function Rsvp() {
       </div>
       <Card>
         <div className="flex flex-col gap-2 border-b border-line p-3 sm:flex-row sm:items-center">
-          <div className="relative flex-1"><Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-mute" /><input value={q} onChange={e => setQ(e.target.value)} placeholder="Find guest" aria-label="Find guest" className="h-10 w-full rounded-xl border border-line pr-3 pl-9 text-sm focus:border-saffron focus:outline-none" /></div>
+          <div className="relative flex-1"><Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-mute" /><input value={q} onChange={e => setQ(e.target.value)} placeholder="Find guest" aria-label="Find guest" className="h-10 w-full rounded-xl border border-line pr-3 pl-9 text-sm focus:border-brand focus:outline-none" /></div>
           <Segmented value={only} onChange={setOnly} options={[{ value: 'all', label: 'Everyone' }, { value: 'pending', label: 'Pending', count: totalPending }]} />
         </div>
         <p className="px-4 pt-2 text-xs text-mute">Tap a cell to record a manual response (cycles pending → attending → declined).</p>
@@ -529,9 +529,9 @@ function Compose({ onSent }: { onSent: () => void }) {
         <div>
           <div className="mb-2 text-sm font-semibold">2 · Message</div>
           <Select value={tpl} onChange={e => setTpl(e.target.value)} placeholder="Write a custom message" options={(templates || []).map(t => ({ value: t.id, label: `${t.name} · ${t.purpose}` }))} aria-label="Template" />
-          {tpl ? <div className="mt-2 rounded-xl bg-paper p-3 text-sm text-ink-2">{templates?.find(t => t.id === tpl)?.body}</div> : <>
+          {tpl ? <div className="mt-2 rounded-xl bg-canvas p-3 text-sm text-ink-2">{templates?.find(t => t.id === tpl)?.body}</div> : <>
             <Textarea className="mt-2" rows={4} value={body} onChange={e => setBody(e.target.value)} placeholder="Hi {{first_name}}, …" aria-label="Message body" />
-            <div className="mt-2 flex flex-wrap gap-1.5">{vars.map(v => <button key={v} onClick={() => setBody(b => `${b}{{${v}}}`)} className="rounded-md bg-sand px-2 py-0.5 text-xs font-semibold text-ink-2 hover:bg-line">{`{{${v}}}`}</button>)}</div>
+            <div className="mt-2 flex flex-wrap gap-1.5">{vars.map(v => <button key={v} onClick={() => setBody(b => `${b}{{${v}}}`)} className="rounded-md bg-wash px-2 py-0.5 text-xs font-semibold text-ink-2 hover:bg-line">{`{{${v}}}`}</button>)}</div>
           </>}
         </div>
         {kind === 'campaign' && <div>
@@ -548,7 +548,7 @@ function Compose({ onSent }: { onSent: () => void }) {
             <div className="text-sm"><b>{pv.recipients}</b> recipient(s)</div>
             {pv.missing.length > 0 && <Callout tone="amber">Some recipients have no value for <b>{pv.missing.map((m: string) => `{{${m}}}`).join(', ')}</b> — they'll see a placeholder.</Callout>}
             {pv.quiet_hours && !when && <Callout tone="sky" icon={Clock}>It's within quiet hours. Consider scheduling for the morning.</Callout>}
-            {pv.samples.map((s: any, i: number) => <div key={i} className="rounded-2xl rounded-tl-sm bg-[#e7f6dd] p-3 text-sm whitespace-pre-wrap shadow-card"><div className="mb-1 text-[11px] font-semibold text-sage">To {s.to}</div>{s.text}</div>)}
+            {pv.samples.map((s: any, i: number) => <div key={i} className="rounded-2xl rounded-tl-sm bg-[#e7f6dd] p-3 text-sm whitespace-pre-wrap shadow-card"><div className="mb-1 text-[11px] font-semibold text-ok">To {s.to}</div>{s.text}</div>)}
           </div> : <p className="text-sm text-mute">Resolve variables to see exactly what recipients get.</p>}
         </Card>
         <Button variant="primary" size="lg" className="w-full" icon={Send} loading={busy === 's'} disabled={(!body && !tpl) || (kind === 'broadcast' && !me.can.broadcast)} onClick={send}>{when ? 'Schedule' : 'Send now'}</Button>
@@ -569,8 +569,8 @@ function Campaigns() {
           { key: 'n', label: 'Message', mobile: 'title', render: c => <span className="line-clamp-1">{c.name}</span> },
           { key: 'k', label: 'Type', render: c => <Badge>{c.kind}</Badge> },
           { key: 'w', label: 'When', mobile: 'sub', render: c => c.scheduled_at ? `Scheduled ${dateTime(c.scheduled_at)}` : ago(c.created_at) },
-          { key: 's', label: 'Delivery', render: c => <span className="flex items-center gap-2 text-xs"><span className="text-sage">{c.delivered}/{c.total} delivered</span><span className="text-sky">{c.read} read</span>{c.failed > 0 && <span className="text-rose">{c.failed} failed</span>}{c.queued > 0 && <span className="text-amber">{c.queued} queued</span>}</span> },
-          { key: 'st', label: 'Status', render: c => <span className="flex items-center gap-2"><Status s={c.status} />{c.queued > 0 && c.status !== 'cancelled' && <button className="text-xs font-semibold text-rose underline" onClick={() => run('x', () => post(`/weddings/${wid}/campaigns/${c.id}/cancel`), 'Scheduled sends cancelled').then(reload)}>Cancel</button>}</span> },
+          { key: 's', label: 'Delivery', render: c => <span className="flex items-center gap-2 text-xs"><span className="text-ok">{c.delivered}/{c.total} delivered</span><span className="text-info">{c.read} read</span>{c.failed > 0 && <span className="text-bad">{c.failed} failed</span>}{c.queued > 0 && <span className="text-warn">{c.queued} queued</span>}</span> },
+          { key: 'st', label: 'Status', render: c => <span className="flex items-center gap-2"><Status s={c.status} />{c.queued > 0 && c.status !== 'cancelled' && <button className="text-xs font-semibold text-bad underline" onClick={() => run('x', () => post(`/weddings/${wid}/campaigns/${c.id}/cancel`), 'Scheduled sends cancelled').then(reload)}>Cancel</button>}</span> },
         ]} />
     </Card>
   )
@@ -584,7 +584,7 @@ function InboxView({ items, reload }: any) {
     <Card>
       {!items.length ? <Empty icon={MessageCircle} title="No replies yet" sub="Guest, host and vendor replies land here. Clear intents (RSVP, delays, tickets) update their workflows automatically." /> : (
         <Divided>{items.map((m: any) => (
-          <Row key={m.id} onClick={() => setThread(m)} className={!m.handled ? 'bg-saffron-50/30' : ''}>
+          <Row key={m.id} onClick={() => setThread(m)} className={!m.handled ? 'bg-brand-50/30' : ''}>
             <Avatar name={m.party_name} />
             <div className="min-w-0 flex-1"><div className="flex items-center gap-2"><span className="truncate font-semibold">{m.party_name}</span><Badge>{m.party_kind}</Badge></div><div className="truncate text-sm text-ink-2">{m.body}</div></div>
             <div className="hidden flex-col items-end gap-1 sm:flex"><Badge tone={m.intent === 'unclear' ? 'amber' : 'sage'}>{INTENT_LABEL[m.intent] || m.intent}</Badge><span className="text-[11px] text-mute">{ago(m.created_at)}</span></div>
@@ -603,11 +603,11 @@ export function ThreadModal({ msg, onClose }: { msg: any; onClose: () => void })
   const send = async () => { await run('r', () => post(`/weddings/${wid}/messages/reply`, { party_kind: msg.party_kind, party_id: msg.party_id, body: text, reply_to: msg.id }), 'Reply sent'); setText(''); reload() }
   return (
     <Modal open={!!msg} onClose={onClose} title={msg?.party_name} sub={`${msg?.party_kind} · WhatsApp`} size="md"
-      footer={<div className="flex w-full gap-2"><input value={text} onChange={e => setText(e.target.value)} onKeyDown={e => e.key === 'Enter' && text && send()} placeholder="Type a reply…" aria-label="Reply" className="h-10 flex-1 rounded-xl border border-line px-3 text-sm focus:border-saffron focus:outline-none" /><Button variant="primary" icon={Send} disabled={!text} loading={busy === 'r'} onClick={send}>Send</Button>{msg && !msg.handled && <Button onClick={() => run('h', () => post(`/weddings/${wid}/messages/${msg.id}/resolve`), 'Marked handled').then(onClose)}>Done</Button>}</div>}>
+      footer={<div className="flex w-full gap-2"><input value={text} onChange={e => setText(e.target.value)} onKeyDown={e => e.key === 'Enter' && text && send()} placeholder="Type a reply…" aria-label="Reply" className="h-10 flex-1 rounded-xl border border-line px-3 text-sm focus:border-brand focus:outline-none" /><Button variant="primary" icon={Send} disabled={!text} loading={busy === 'r'} onClick={send}>Send</Button>{msg && !msg.handled && <Button onClick={() => run('h', () => post(`/weddings/${wid}/messages/${msg.id}/resolve`), 'Marked handled').then(onClose)}>Done</Button>}</div>}>
       <div className="space-y-2 rounded-2xl bg-[#efeae2] p-3">
         {(data || []).map(m => (
           <div key={m.id} className={cx('max-w-[85%] rounded-2xl px-3 py-2 text-sm whitespace-pre-wrap shadow-card', m.direction === 'out' ? 'ml-auto rounded-tr-sm bg-[#d9fdd3]' : 'rounded-tl-sm bg-white')}>
-            {m.body}<div className="mt-1 flex items-center justify-end gap-1 text-[10px] text-mute">{ago(m.created_at)}{m.direction === 'out' && <span className={m.status === 'read' ? 'text-sky' : m.status === 'failed' ? 'text-rose' : ''}>{m.status === 'failed' ? '⚠ failed' : m.status === 'read' ? '✓✓' : '✓'}</span>}{m.intent && m.direction === 'in' && <Badge tone={m.intent === 'unclear' ? 'amber' : 'sage'}>{INTENT_LABEL[m.intent]}</Badge>}</div>
+            {m.body}<div className="mt-1 flex items-center justify-end gap-1 text-[10px] text-mute">{ago(m.created_at)}{m.direction === 'out' && <span className={m.status === 'read' ? 'text-info' : m.status === 'failed' ? 'text-bad' : ''}>{m.status === 'failed' ? '⚠ failed' : m.status === 'read' ? '✓✓' : '✓'}</span>}{m.intent && m.direction === 'in' && <Badge tone={m.intent === 'unclear' ? 'amber' : 'sage'}>{INTENT_LABEL[m.intent]}</Badge>}</div>
           </div>
         ))}
       </div>
@@ -650,7 +650,7 @@ function AllMessages() {
   return (
     <Card>
       <DataTable rows={data} rowKey={m => m.id} onRow={setThread} cols={[
-        { key: 'd', label: '', render: m => <span className={cx('text-xs font-bold', m.direction === 'in' ? 'text-sky' : 'text-mute')}>{m.direction === 'in' ? 'IN' : 'OUT'}</span>, mobile: 'hide' },
+        { key: 'd', label: '', render: m => <span className={cx('text-xs font-bold', m.direction === 'in' ? 'text-info' : 'text-mute')}>{m.direction === 'in' ? 'IN' : 'OUT'}</span>, mobile: 'hide' },
         { key: 'p', label: 'With', mobile: 'title', render: m => <span>{m.party_name} <span className="text-xs text-mute">· {m.party_kind}</span></span> },
         { key: 'b', label: 'Message', mobile: 'sub', render: m => <span className="line-clamp-1 text-ink-2">{m.body}</span> },
         { key: 's', label: 'Status', render: m => <Status s={m.status} /> },
@@ -669,7 +669,7 @@ function Templates() {
     <Card>
       <CardHeader title="Message templates" sub="Shared across your agency" action={<Button size="sm" icon={Plus} onClick={() => setE({ name: '', purpose: 'general', body: '' })}>New</Button>} />
       <Divided>{data.map(t => <Row key={t.id} onClick={() => setE(t)}><div className="min-w-0 flex-1"><div className="flex items-center gap-2 font-semibold">{t.name}<Badge>{t.purpose}</Badge></div><div className="truncate text-sm text-mute">{t.body}</div></div></Row>)}</Divided>
-      <Modal open={!!e} onClose={() => setE(null)} title={e?.id ? 'Edit template' : 'New template'} footer={<>{e?.id && <Button variant="ghost" className="mr-auto text-rose" onClick={() => run('d', () => del(`/templates/${e.id}`), 'Deleted').then(() => { setE(null); reload() })}>Delete</Button>}<Button onClick={() => setE(null)}>Cancel</Button><Button variant="primary" onClick={() => run('s', () => e.id ? patch(`/templates/${e.id}`, e) : post('/templates', e), 'Template saved').then(() => { setE(null); reload() })}>Save</Button></>}>
+      <Modal open={!!e} onClose={() => setE(null)} title={e?.id ? 'Edit template' : 'New template'} footer={<>{e?.id && <Button variant="ghost" className="mr-auto text-bad" onClick={() => run('d', () => del(`/templates/${e.id}`), 'Deleted').then(() => { setE(null); reload() })}>Delete</Button>}<Button onClick={() => setE(null)}>Cancel</Button><Button variant="primary" onClick={() => run('s', () => e.id ? patch(`/templates/${e.id}`, e) : post('/templates', e), 'Template saved').then(() => { setE(null); reload() })}>Save</Button></>}>
         {e && <div className="space-y-3"><Input label="Name" value={e.name} onChange={x => setE({ ...e, name: x.target.value })} /><Input label="Purpose" value={e.purpose} onChange={x => setE({ ...e, purpose: x.target.value })} /><Textarea label="Body" rows={5} value={e.body} onChange={x => setE({ ...e, body: x.target.value })} hint="Use {{first_name}}, {{link}}…" /></div>}
       </Modal>
     </Card>

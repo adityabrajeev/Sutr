@@ -16,19 +16,19 @@ export default function ProspectPage() {
   const p = data.proposal
   const view = !p || ['configuring', 'draft'].includes(p.status) ? 'configure' : p.status
   return (
-    <div className="min-h-dvh bg-paper pb-10">
+    <div className="min-h-dvh bg-canvas pb-10">
       <LinkHeader agency={data.agency} title={view === 'configure' ? 'Make Your Own Wedding' : `Your proposal${p ? ` · v${p.version}` : ''}`} sub={`For ${data.lead.name}${data.agency.tagline ? ` · ${data.agency.tagline}` : ''}`} />
       <main className="mx-auto -mt-4 max-w-3xl space-y-4 px-4">
         {view === 'configure' && <Configurator data={data} token={token!} onSaved={setData} />}
-        {view === 'submitted' && <Section><div className="flex items-start gap-3"><Clock className="mt-0.5 size-5 text-saffron" /><div><div className="font-semibold">Your planner is reviewing your estimate</div><p className="text-sm text-mute">You'll get a branded proposal on WhatsApp shortly. Estimated total so far: <b className="text-ink">{inr(p.total)}</b>.</p></div></div></Section>}
-        {view === 'revision_requested' && <Section><div className="flex items-start gap-3"><MessageSquare className="mt-0.5 size-5 text-saffron" /><div><div className="font-semibold">Changes requested</div><p className="text-sm text-mute">“{p.comment}” — a revised version is on its way.</p></div></div></Section>}
+        {view === 'submitted' && <Section><div className="flex items-start gap-3"><Clock className="mt-0.5 size-5 text-brand" /><div><div className="font-semibold">Your planner is reviewing your estimate</div><p className="text-sm text-mute">You'll get a branded proposal on WhatsApp shortly. Estimated total so far: <b className="text-ink">{inr(p.total)}</b>.</p></div></div></Section>}
+        {view === 'revision_requested' && <Section><div className="flex items-start gap-3"><MessageSquare className="mt-0.5 size-5 text-brand" /><div><div className="font-semibold">Changes requested</div><p className="text-sm text-mute">“{p.comment}” — a revised version is on its way.</p></div></div></Section>}
         {['sent', 'expired'].includes(view) && <ProposalView data={data} token={token!} onSaved={setData} />}
-        {view === 'accepted' && <Section className="text-center"><PartyPopper className="mx-auto size-10 text-saffron" /><h2 className="mt-3 text-2xl font-medium">You're booked! 🎉</h2><p className="mt-1 text-sm text-mute">{data.agency.name} is setting up your wedding workspace. Your planner will be in touch on WhatsApp.</p></Section>}
+        {view === 'accepted' && <Section className="text-center"><PartyPopper className="mx-auto size-10 text-brand" /><h2 className="mt-3 text-2xl font-medium">You're booked! 🎉</h2><p className="mt-1 text-sm text-mute">{data.agency.name} is setting up your wedding workspace. Your planner will be in touch on WhatsApp.</p></Section>}
         {view === 'declined' && <Section className="text-center"><Heart className="mx-auto size-8 text-mute" /><h2 className="mt-3 text-xl font-medium">Thanks for considering us</h2><p className="mt-1 text-sm text-mute">If plans change, just reply on WhatsApp — we'd love to help.</p></Section>}
         {(data.portfolio.length > 0 || data.testimonials.length > 0) && <>
           <h2 className="pt-4 text-xl font-medium">Weddings we've planned</h2>
           <div className="grid gap-3 sm:grid-cols-2">{data.portfolio.map((c: any) => <div key={c.id} className="overflow-hidden rounded-2xl border border-line bg-card shadow-card">{c.cover && <img src={fileUrl(c.cover)} alt="" className="aspect-[16/9] w-full object-cover" />}<div className="p-4"><div className="font-semibold">{c.title}</div><p className="mt-1 line-clamp-3 text-sm text-mute">{c.summary}</p></div></div>)}</div>
-          {data.testimonials.map((t: any, i: number) => <Section key={i}><div className="flex gap-0.5">{Array.from({ length: t.rating || 5 }, (_, k) => <Star key={k} className="size-4 fill-marigold text-marigold" />)}</div><p className="display mt-2 text-lg leading-snug">“{t.body}”</p><div className="mt-2 text-sm text-mute">— {t.author}</div></Section>)}
+          {data.testimonials.map((t: any, i: number) => <Section key={i}><div className="flex gap-0.5">{Array.from({ length: t.rating || 5 }, (_, k) => <Star key={k} className="size-4 fill-haldi text-haldi" />)}</div><p className="display mt-2 text-lg leading-snug">“{t.body}”</p><div className="mt-2 text-sm text-mute">— {t.author}</div></Section>)}
         </>}
       </main>
     </div>
@@ -59,14 +59,14 @@ function Configurator({ data, token, onSaved }: any) {
   return (
     <div className="grid gap-4 lg:grid-cols-[1fr_280px]">
       <div className="space-y-4">
-        <div className="flex gap-1.5">{STEPS.map((s, i) => <button key={s[0]} onClick={() => setStep(i)} className={cx('h-1.5 flex-1 rounded-full', i <= step ? 'bg-saffron' : 'bg-line')} aria-label={s[1]} />)}</div>
-        <div><div className="text-xs font-semibold tracking-wide text-saffron uppercase">Step {step + 1} of {STEPS.length} · {STEPS[step][1]}</div><h2 className="mt-1 text-2xl font-medium">{STEPS[step][2]}</h2></div>
+        <div className="flex gap-1.5">{STEPS.map((s, i) => <button key={s[0]} onClick={() => setStep(i)} className={cx('h-1.5 flex-1 rounded-full', i <= step ? 'bg-brand' : 'bg-line')} aria-label={s[1]} />)}</div>
+        <div><div className="text-xs font-semibold text-brand">Step {step + 1} of {STEPS.length} · {STEPS[step][1]}</div><h2 className="mt-1 text-2xl font-medium">{STEPS[step][2]}</h2></div>
         {kind !== 'details' ? (
           <div className="grid gap-2.5 sm:grid-cols-2">{items.map((c: any) => {
             const on = ids.includes(c.id)
             return (
-              <button key={c.id} onClick={() => toggle(c.id)} aria-pressed={on} className={cx('flex flex-col rounded-2xl border bg-card p-4 text-left shadow-card transition', on ? 'border-saffron ring-2 ring-saffron/20' : 'border-line hover:border-saffron/40')}>
-                <div className="flex items-start justify-between gap-2"><span className="font-semibold">{c.name}</span><span className={cx('grid size-6 shrink-0 place-items-center rounded-full border', on ? 'border-saffron bg-saffron text-white' : 'border-line')}>{on && <Check className="size-4" />}</span></div>
+              <button key={c.id} onClick={() => toggle(c.id)} aria-pressed={on} className={cx('flex flex-col rounded-2xl border bg-card p-4 text-left shadow-card transition', on ? 'border-brand ring-2 ring-brand/20' : 'border-line hover:border-brand/40')}>
+                <div className="flex items-start justify-between gap-2"><span className="font-semibold">{c.name}</span><span className={cx('grid size-6 shrink-0 place-items-center rounded-full border', on ? 'border-brand bg-brand text-white' : 'border-line')}>{on && <Check className="size-4" />}</span></div>
                 <span className="mt-1 flex-1 text-sm text-mute">{c.description}</span>
                 <span className="mt-2 text-sm font-semibold text-ink-2">{priceLabel(c)}</span>
               </button>
@@ -118,13 +118,13 @@ function ProposalView({ data, token, onSaved }: any) {
       {expired && <Callout tone="rose" icon={Clock}>This proposal expired on {date(p.expires_at)}. Request a fresh version and we'll update the pricing.</Callout>}
       <Section>
         <div className="mb-4 flex flex-wrap items-end justify-between gap-2"><div><div className="text-sm text-mute">{p.guest_count} guests · {p.destination || 'Destination TBC'} · {p.wedding_date ? date(p.wedding_date, { day: 'numeric', month: 'long', year: 'numeric' }) : 'Date TBC'}</div></div>{p.expires_at && !expired && <div className="text-xs text-mute">Valid until {date(p.expires_at, { day: 'numeric', month: 'short' })}</div>}</div>
-        {groups.map(([k, list]) => <div key={k} className="mb-4"><div className="mb-1.5 text-xs font-semibold tracking-wide text-saffron uppercase">{{ function: 'Celebrations', service: 'Services', addon: 'Add-ons' }[k]}</div>{list.map((i: any, n: number) => <div key={n} className="flex justify-between gap-3 border-b border-line py-2 text-sm last:border-0"><span>{i.name}{i.qty > 1 && <span className="text-mute"> · {i.qty} {i.pricing === 'per_guest' ? 'guests' : 'functions'}</span>}</span><span className="tabular">{inrFull(i.amount)}</span></div>)}</div>)}
+        {groups.map(([k, list]) => <div key={k} className="mb-4"><div className="mb-1.5 text-xs font-semibold text-brand">{{ function: 'Celebrations', service: 'Services', addon: 'Add-ons' }[k]}</div>{list.map((i: any, n: number) => <div key={n} className="flex justify-between gap-3 border-b border-line py-2 text-sm last:border-0"><span>{i.name}{i.qty > 1 && <span className="text-mute"> · {i.qty} {i.pricing === 'per_guest' ? 'guests' : 'functions'}</span>}</span><span className="tabular">{inrFull(i.amount)}</span></div>)}</div>)}
         <div className="space-y-1 border-t-2 border-ink pt-3 text-sm">
           <div className="flex justify-between"><span className="text-mute">Subtotal</span><span className="tabular">{inrFull(p.subtotal)}</span></div>
-          {p.discount > 0 && <div className="flex justify-between text-sage"><span>Discount ({p.discount}%)</span><span className="tabular">−{inrFull(p.subtotal - p.total)}</span></div>}
+          {p.discount > 0 && <div className="flex justify-between text-ok"><span>Discount ({p.discount}%)</span><span className="tabular">−{inrFull(p.subtotal - p.total)}</span></div>}
           <div className="flex justify-between pt-1 text-xl font-semibold"><span>Total</span><span className="tabular">{inrFull(p.total)}</span></div>
         </div>
-        {p.notes && <div className="mt-4 rounded-xl bg-paper p-3 text-sm whitespace-pre-wrap"><div className="mb-1 text-xs font-semibold text-mute">A note from your planner</div>{p.notes}</div>}
+        {p.notes && <div className="mt-4 rounded-xl bg-canvas p-3 text-sm whitespace-pre-wrap"><div className="mb-1 text-xs font-semibold text-mute">A note from your planner</div>{p.notes}</div>}
       </Section>
       {!expired ? (
         <div className="grid gap-2 sm:grid-cols-3">

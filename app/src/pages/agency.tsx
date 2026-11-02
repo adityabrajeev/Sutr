@@ -6,7 +6,7 @@ import {
 import { useApi, post, get } from '../api'
 import { useMe, useAuth } from '../auth'
 import { Page } from '../shell'
-import { Avatar, Badge, Button, Callout, Card, CardHeader, Check, cx, Empty, ErrorBox, HealthRing, Input, Loading, PageHeader, Segmented, Select, Status, Textarea, Toggle, useAction, Divided, Row } from '../ui'
+import { Avatar, Badge, Button, Callout, Card, CardHeader, Check, cx, Empty, ErrorBox, HealthRing, Input, Loading, PageHeader, Segmented, Select, Status, Textarea, Toggle, useAction, Divided, Row, Ticket } from '../ui'
 import { date, dateLong, daysTo, hhmm, inr, plural, ago } from '../format'
 
 // =====================================================================
@@ -31,86 +31,77 @@ export function Brief() {
 
       <div className="grid gap-5 xl:grid-cols-[1.35fr_1fr]">
         <div className="space-y-5">
-          {b.critical.length > 0 && (
-            <section aria-label="Critical items">
-              <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-rose"><Flame className="size-4" />Needs you now</div>
-              <div className="grid gap-2.5 sm:grid-cols-2">
-                {b.critical.map((c: any, i: number) => (
-                  <button key={i} onClick={() => go(c)} className="group rounded-2xl border border-rose/25 bg-rose-50/60 p-4 text-left hover:border-rose/50">
-                    <div className="text-xs font-semibold text-rose">{c.wedding}</div>
-                    <div className="mt-1 font-semibold">{c.title}</div>
-                    {c.next && <div className="mt-2 flex items-center gap-1 text-xs font-semibold text-ink-2 group-hover:text-rose">{c.next}<ArrowRight className="size-3" /></div>}
-                  </button>
+          {b.critical[0] ? (
+            <Ticket stub="Needs you first" stubIcon={Flame} title={b.critical[0].title} sub={b.critical[0].wedding}
+              sign={b.critical.length > 1 ? `+${b.critical.length - 1}` : undefined} signLabel={b.critical.length > 1 ? 'more critical' : undefined}
+              rows={b.critical[0].next ? [{ icon: ArrowRight, text: b.critical[0].next }] : []}
+              actions={<Button variant="haldi" size="lg" onClick={() => go(b.critical[0])}>Open it</Button>} />
+          ) : <Ticket stub="All clear" stubIcon={CheckCircle2} title="Nothing critical across your weddings" sub={b.attention.length ? `${b.attention.length} smaller item(s) below` : 'Enjoy the quiet'} />}
+
+          {b.critical.length + b.attention.length > 1 && (
+            <Card>
+              <CardHeader title="Everything else, most urgent first" icon={AlertTriangle} />
+              <Divided>
+                {[...b.critical.slice(1), ...b.attention].map((a: any, i: number) => (
+                  <Row key={i} onClick={() => go(a)}>
+                    <span className={cx('size-2.5 shrink-0 rounded-full', a.severity === 'critical' ? 'bg-bad' : 'bg-haldi')} aria-label={a.severity} />
+                    <div className="min-w-0 flex-1"><div className="text-[15px] font-semibold">{a.title}</div><div className="text-sm text-mute">{a.wedding}{a.next ? <span>. {a.next}</span> : null}</div></div>
+                  </Row>
                 ))}
-              </div>
-            </section>
+              </Divided>
+            </Card>
           )}
 
           <Card>
-            <CardHeader title="Weddings" sub={`${b.weddings.length} active`} icon={Heart} action={<Link to="/weddings" className="text-xs font-semibold text-saffron">All weddings</Link>} />
+            <CardHeader title="Weddings" sub={`${b.weddings.length} active`} icon={Heart} action={<Link to="/weddings" className="text-xs font-semibold text-brand">All weddings</Link>} />
             {b.weddings.length ? <Divided>
               {b.weddings.map((w: any) => (
-                <Link key={w.id} to={`/w/${w.id}`} className="flex items-center gap-4 px-4 py-3.5 hover:bg-paper sm:px-5">
+                <Link key={w.id} to={`/w/${w.id}`} className="flex items-center gap-4 px-4 py-3.5 hover:bg-canvas sm:px-5">
                   <HealthRing score={w.score} size={46} />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2"><span className="truncate font-semibold">{w.name}</span><Status s={w.status} /></div>
-                    <div className="truncate text-xs text-mute">{date(w.start_date)} · {w.city} · {w.status === 'live' ? 'happening now' : w.days_out >= 0 ? `${w.days_out} days to go` : 'completed'}</div>
-                    {w.top && <div className={cx('mt-1 truncate text-xs font-medium', w.top.severity === 'critical' ? 'text-rose' : w.top.severity === 'warning' ? 'text-amber' : 'text-ink-2')}>{w.top.title}</div>}
+                    <div className="truncate text-sm text-mute">{w.status === 'live' ? 'Happening now' : w.days_out >= 0 ? `${w.days_out} days to go, ${date(w.start_date)}` : 'Completed'} in {w.city}</div>
                   </div>
                   <ArrowRight className="size-4 shrink-0 text-mute" />
                 </Link>
               ))}
             </Divided> : <Empty icon={Heart} title="No active weddings" sub="Create a wedding or convert an accepted proposal." />}
           </Card>
-
-          {b.attention.length > 0 && (
-            <Card>
-              <CardHeader title="Attention today" sub="Warnings across your weddings" icon={AlertTriangle} />
-              <Divided>
-                {b.attention.map((a: any, i: number) => (
-                  <Row key={i} onClick={() => go(a)}>
-                    <span className="size-2 shrink-0 rounded-full bg-marigold" />
-                    <div className="min-w-0 flex-1"><div className="truncate text-sm font-semibold">{a.title}</div><div className="truncate text-xs text-mute">{a.wedding}{a.next ? ` · ${a.next}` : ''}</div></div>
-                  </Row>
-                ))}
-              </Divided>
-            </Card>
-          )}
         </div>
 
         <div className="space-y-5">
           <Card>
-            <CardHeader title="This week" sub="Functions in the next 7 days" icon={CalendarDays} action={<Link to="/calendar" className="text-xs font-semibold text-saffron">Calendar</Link>} />
+            <CardHeader title="This week" sub="Functions in the next 7 days" icon={CalendarDays} action={<Link to="/calendar" className="text-xs font-semibold text-brand">Calendar</Link>} />
             {b.functions.length ? <Divided>
               {b.functions.map((f: any) => (
-                <Link key={f.id} to={`/w/${f.wedding_id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-paper sm:px-5">
-                  <div className="w-12 shrink-0 text-center"><div className="text-[11px] font-semibold uppercase text-mute">{date(f.date, { weekday: 'short' })}</div><div className="text-lg font-semibold">{date(f.date, { day: 'numeric' })}</div></div>
-                  <div className="min-w-0 flex-1"><div className="truncate text-sm font-semibold">{f.name}{f.live_status === 'live' && <span className="ml-2 inline-flex items-center gap-1 text-xs text-rose"><span className="live-dot size-1.5 rounded-full bg-rose" />live</span>}</div><div className="truncate text-xs text-mute">{f.wedding} · {hhmm(f.start_time)} · {f.venue}</div></div>
+                <Link key={f.id} to={`/w/${f.wedding_id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-canvas sm:px-5">
+                  <div className="w-12 shrink-0 text-center"><div className="text-[11px] font-semibold text-mute">{date(f.date, { weekday: 'short' })}</div><div className="text-lg font-semibold">{date(f.date, { day: 'numeric' })}</div></div>
+                  <div className="min-w-0 flex-1"><div className="truncate text-sm font-semibold">{f.name}{f.live_status === 'live' && <span className="ml-2 inline-flex items-center gap-1 text-xs text-bad"><span className="live-dot size-1.5 rounded-full bg-bad" />live</span>}</div><div className="truncate text-xs text-mute">{f.wedding} · {hhmm(f.start_time)} · {f.venue}</div></div>
                 </Link>
               ))}
             </Divided> : <div className="px-5 py-6 text-sm text-mute">No functions this week.</div>}
           </Card>
 
           <Card>
-            <CardHeader title="My tasks" sub="Due today or overdue" icon={CheckCircle2} action={<Link to="/tasks?filter=mine" className="text-xs font-semibold text-saffron">All tasks</Link>} />
+            <CardHeader title="My tasks" sub="Due today or overdue" icon={CheckCircle2} action={<Link to="/tasks?filter=mine" className="text-xs font-semibold text-brand">All tasks</Link>} />
             {b.my_tasks.length ? <Divided>
               {b.my_tasks.map((t: any) => (
-                <Link key={t.id} to={t.wedding_id ? `/w/${t.wedding_id}/tasks` : '/tasks'} className="flex items-center gap-3 px-4 py-2.5 hover:bg-paper sm:px-5">
+                <Link key={t.id} to={t.wedding_id ? `/w/${t.wedding_id}/tasks` : '/tasks'} className="flex items-center gap-3 px-4 py-2.5 hover:bg-canvas sm:px-5">
                   <Status s={t.status} />
-                  <div className="min-w-0 flex-1"><div className="truncate text-sm font-medium">{t.title}</div><div className="truncate text-xs text-mute">{t.wedding || 'Agency'} · {t.due_at ? (daysTo(t.due_at)! < 0 ? <span className="text-rose">overdue {ago(t.due_at)}</span> : `due ${ago(t.due_at)}`) : 'no due date'}</div></div>
+                  <div className="min-w-0 flex-1"><div className="truncate text-sm font-medium">{t.title}</div><div className="truncate text-xs text-mute">{t.wedding || 'Agency'} · {t.due_at ? (daysTo(t.due_at)! < 0 ? <span className="text-bad">overdue {ago(t.due_at)}</span> : `due ${ago(t.due_at)}`) : 'no due date'}</div></div>
                 </Link>
               ))}
             </Divided> : <div className="px-5 py-6 text-sm text-mute">Nothing due. 🎉</div>}
           </Card>
 
           <Card>
-            <CardHeader title="Team today" icon={Users2} action={<Link to="/team" className="text-xs font-semibold text-saffron">Team</Link>} />
+            <CardHeader title="Team today" icon={Users2} action={<Link to="/team" className="text-xs font-semibold text-brand">Team</Link>} />
             <div className="flex flex-wrap gap-2 p-4">
               {b.team.map((u: any) => (
                 <div key={u.id} className="flex items-center gap-2 rounded-full border border-line py-1 pr-3 pl-1">
                   <Avatar name={u.name} size={26} />
                   <span className="text-xs font-semibold">{u.name.split(' ')[0]}</span>
-                  <span className={cx('size-2 rounded-full', !u.available_today ? 'bg-rose' : u.shift_status === 'on' ? 'bg-sage' : 'bg-line')} title={!u.available_today ? 'Unavailable' : u.shift_status === 'on' ? 'On shift' : 'Off shift'} />
+                  <span className={cx('size-2 rounded-full', !u.available_today ? 'bg-bad' : u.shift_status === 'on' ? 'bg-ok' : 'bg-line')} title={!u.available_today ? 'Unavailable' : u.shift_status === 'on' ? 'On shift' : 'Off shift'} />
                 </div>
               ))}
             </div>
@@ -118,7 +109,7 @@ export function Brief() {
 
           {me.can.proposals && b.leads.length > 0 && (
             <Card>
-              <CardHeader title="Open leads" icon={Handshake} action={<Link to="/proposals" className="text-xs font-semibold text-saffron">Pipeline</Link>} />
+              <CardHeader title="Open leads" icon={Handshake} action={<Link to="/proposals" className="text-xs font-semibold text-brand">Pipeline</Link>} />
               <Divided>{b.leads.map((l: any) => <Row key={l.id} onClick={() => nav(`/proposals/${l.id}`)}><div className="min-w-0 flex-1"><div className="truncate text-sm font-semibold">{l.name}</div><div className="text-xs text-mute">{l.destination || '—'} · {l.guest_count || '?'} guests</div></div><Status s={l.proposal_status || l.status} /></Row>)}</Divided>
             </Card>
           )}
@@ -149,7 +140,7 @@ export function Weddings() {
       {!list.length ? <Card><Empty icon={Heart} title="No weddings here" action={me.can.createWedding && <Button variant="primary" icon={Plus} onClick={() => nav('/weddings/new')}>Create one</Button>} /></Card> : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {list.map(w => (
-            <Link key={w.id} to={`/w/${w.id}`} className="group flex flex-col rounded-2xl border border-line bg-card p-5 shadow-card hover:border-saffron/40">
+            <Link key={w.id} to={`/w/${w.id}`} className="group flex flex-col rounded-2xl border border-line bg-card p-5 shadow-card hover:border-brand/40">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0"><div className="truncate text-lg font-semibold">{w.name}</div><div className="truncate text-sm text-mute">{w.couple}</div></div>
                 <HealthRing score={w.score} size={44} />
@@ -159,7 +150,7 @@ export function Weddings() {
                 <div><div className="text-mute">Guests</div><div className="font-semibold">{w.guest_count}</div></div>
                 <div><div className="text-mute">Status</div><Status s={w.status} /></div>
               </div>
-              <div className={cx('mt-4 flex min-h-9 items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium', w.critical ? 'bg-rose-50 text-rose' : w.top ? 'bg-amber-50 text-amber' : 'bg-sage-50 text-sage')}>
+              <div className={cx('mt-4 flex min-h-9 items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium', w.critical ? 'bg-bad-50 text-bad' : w.top ? 'bg-warn-50 text-warn' : 'bg-ok-50 text-ok')}>
                 {w.critical ? <AlertTriangle className="size-3.5 shrink-0" /> : <CheckCircle2 className="size-3.5 shrink-0" />}
                 <span className="truncate">{w.top?.title || 'On track'}</span>
               </div>
@@ -228,8 +219,8 @@ export function CreateWedding() {
       <PageHeader eyebrow="New wedding" title="Create a wedding workspace" sub="Minimal setup now — everything can be edited later." />
       <ol className="scroll-x mb-5 flex gap-2">
         {STEPS.map((s, i) => (
-          <li key={s}><button onClick={() => i < step && setStep(i)} className={cx('flex h-8 items-center gap-2 rounded-full px-3 text-xs font-semibold whitespace-nowrap', i === step ? 'bg-ink text-paper' : i < step ? 'bg-sage-50 text-sage' : 'bg-sand text-mute')}>
-            <span className="grid size-5 place-items-center rounded-full bg-paper/20 text-[11px]">{i < step ? '✓' : i + 1}</span>{s}
+          <li key={s}><button onClick={() => i < step && setStep(i)} className={cx('flex h-8 items-center gap-2 rounded-full px-3 text-xs font-semibold whitespace-nowrap', i === step ? 'bg-ink text-canvas' : i < step ? 'bg-ok-50 text-ok' : 'bg-wash text-mute')}>
+            <span className="grid size-5 place-items-center rounded-full bg-canvas/20 text-[11px]">{i < step ? '✓' : i + 1}</span>{s}
           </button></li>
         ))}
       </ol>
@@ -238,8 +229,8 @@ export function CreateWedding() {
           <div className="space-y-4">
             <div className="grid gap-3 sm:grid-cols-2">
               {[['scratch', 'From scratch', 'Enter the basics yourself', FileText], ['template', 'From an SOP template', 'Pre-load a task plan', LayoutTemplate], ['clone', 'Clone a past wedding', 'Copy functions, vendors, budget…', Copy], ['proposal', 'From an accepted proposal', 'Pre-fill functions, services & budget', Handshake]].map(([k, t, d, I]: any) => (
-                <button key={k} onClick={() => set('method', k)} disabled={k === 'proposal' && !accepted.length && !f.proposal_id} className={cx('flex items-start gap-3 rounded-2xl border p-4 text-left disabled:opacity-40', f.method === k ? 'border-saffron bg-saffron-50/50 ring-2 ring-saffron/15' : 'border-line hover:bg-paper')}>
-                  <I className="mt-0.5 size-5 text-saffron" /><span><span className="block font-semibold">{t}</span><span className="text-sm text-mute">{k === 'proposal' && !accepted.length ? 'No accepted proposals waiting' : d}</span></span>
+                <button key={k} onClick={() => set('method', k)} disabled={k === 'proposal' && !accepted.length && !f.proposal_id} className={cx('flex items-start gap-3 rounded-2xl border p-4 text-left disabled:opacity-40', f.method === k ? 'border-brand bg-brand-50/50 ring-2 ring-brand/15' : 'border-line hover:bg-canvas')}>
+                  <I className="mt-0.5 size-5 text-brand" /><span><span className="block font-semibold">{t}</span><span className="text-sm text-mute">{k === 'proposal' && !accepted.length ? 'No accepted proposals waiting' : d}</span></span>
                 </button>
               ))}
             </div>
@@ -303,8 +294,8 @@ export function CreateWedding() {
               <div className="mb-2 font-semibold">Assign team</div>
               <div className="grid gap-2 sm:grid-cols-2">
                 {(team?.members || []).filter((m: any) => m.status === 'active').map((m: any) => (
-                  <label key={m.id} className={cx('flex cursor-pointer items-center gap-3 rounded-xl border p-3', f.team.includes(m.id) ? 'border-saffron bg-saffron-50/40' : 'border-line')}>
-                    <input type="checkbox" className="accent-[#b4532a]" checked={f.team.includes(m.id)} onChange={e => set('team', e.target.checked ? [...f.team, m.id] : f.team.filter((x: string) => x !== m.id))} />
+                  <label key={m.id} className={cx('flex cursor-pointer items-center gap-3 rounded-xl border p-3', f.team.includes(m.id) ? 'border-brand bg-brand-50/40' : 'border-line')}>
+                    <input type="checkbox" className="accent-[#0E6B66]" checked={f.team.includes(m.id)} onChange={e => set('team', e.target.checked ? [...f.team, m.id] : f.team.filter((x: string) => x !== m.id))} />
                     <Avatar name={m.name} size={30} /><span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold">{m.name}</span><span className="block truncate text-xs text-mute">{m.title}</span></span>
                     {(m.unavailable || []).some((r: any) => f.start_date && r.from <= (f.end_date || f.start_date) && r.to >= f.start_date) && <Badge tone="rose">Unavailable</Badge>}
                   </label>

@@ -64,7 +64,7 @@ function CatalogueInline() {
         { key: 'c', label: 'Cost', render: c => inrFull(c.cost) }, { key: 'pr', label: 'Price', render: c => <b>{inrFull(c.price)}</b> },
         { key: 'm', label: 'Margin', render: c => `${c.price ? Math.round((1 - c.cost / c.price) * 100) : 0}%` },
       ]} />}
-      <Modal open={!!e} onClose={() => setE(null)} title={e?.id ? 'Edit item' : 'New item'} size="md" footer={<>{e?.id && <Button variant="ghost" className="mr-auto text-rose" onClick={() => run('d', () => del(`/catalogue/${e.id}`), 'Archived').then(() => { setE(null); reload() })}>Archive</Button>}<Button onClick={() => setE(null)}>Cancel</Button><Button variant="primary" onClick={() => run('s', () => e.id ? patch(`/catalogue/${e.id}`, e) : post('/catalogue', e), 'Saved').then(() => { setE(null); reload() })}>Save</Button></>}>
+      <Modal open={!!e} onClose={() => setE(null)} title={e?.id ? 'Edit item' : 'New item'} size="md" footer={<>{e?.id && <Button variant="ghost" className="mr-auto text-bad" onClick={() => run('d', () => del(`/catalogue/${e.id}`), 'Archived').then(() => { setE(null); reload() })}>Archive</Button>}<Button onClick={() => setE(null)}>Cancel</Button><Button variant="primary" onClick={() => run('s', () => e.id ? patch(`/catalogue/${e.id}`, e) : post('/catalogue', e), 'Saved').then(() => { setE(null); reload() })}>Save</Button></>}>
         {e && <div className="grid gap-3 sm:grid-cols-2"><Select label="Type" value={e.kind} onChange={x => setE({ ...e, kind: x.target.value })} options={['function', 'service', 'addon']} /><Select label="Pricing" value={e.pricing} onChange={x => setE({ ...e, pricing: x.target.value })} options={[{ value: 'fixed', label: 'Fixed' }, { value: 'per_guest', label: 'Per guest' }, { value: 'per_function', label: 'Per function' }]} /><Input className="sm:col-span-2" label="Name" value={e.name} onChange={x => setE({ ...e, name: x.target.value })} /><Input label="Your cost (₹)" type="number" value={e.cost} onChange={x => setE({ ...e, cost: +x.target.value })} /><Input label="Price (₹)" type="number" value={e.price} onChange={x => setE({ ...e, price: +x.target.value })} /><Input label="Category" value={e.category || ''} onChange={x => setE({ ...e, category: x.target.value })} /><Textarea className="sm:col-span-2" label="Description (shown to prospects)" value={e.description || ''} onChange={x => setE({ ...e, description: x.target.value })} /></div>}
       </Modal>
     </Modal>
@@ -109,9 +109,9 @@ export function LeadDetail() {
       <PageHeader title={l.name} sub={`${l.destination || 'Destination TBC'} · ${l.wedding_date ? date(l.wedding_date, { day: 'numeric', month: 'short', year: 'numeric' }) : 'date TBC'} · ${l.guest_count || '?'} guests · ${l.source}`}
         actions={<>
           <Button icon={Copy} onClick={() => { navigator.clipboard?.writeText(location.origin + l.link); toast('Prospect link copied') }}>Copy link</Button>
-          <a href={l.link} target="_blank" className="inline-flex h-10 items-center gap-2 rounded-xl border border-line bg-card px-4 text-sm font-semibold hover:bg-sand"><ExternalLink className="size-4" />Prospect view</a>
+          <a href={l.link} target="_blank" className="inline-flex h-10 items-center gap-2 rounded-xl border border-line bg-card px-4 text-sm font-semibold hover:bg-wash"><ExternalLink className="size-4" />Prospect view</a>
           <Button icon={Send} onClick={() => run('l', () => post(`/leads/${l.id}/send-link`), 'Make Your Own Wedding link sent')}>Send configurator</Button>
-          {!['won', 'lost'].includes(l.status) && <Button variant="ghost" className="text-rose" onClick={() => run('lost', () => patch(`/leads/${l.id}`, { status: 'lost' }), 'Marked lost').then(reload)}>Mark lost</Button>}
+          {!['won', 'lost'].includes(l.status) && <Button variant="ghost" className="text-bad" onClick={() => run('lost', () => patch(`/leads/${l.id}`, { status: 'lost' }), 'Marked lost').then(reload)}>Mark lost</Button>}
         </>} />
       {p.status === 'revision_requested' && <div className="mb-4"><Callout tone="amber" icon={AlertTriangle}><b>Revision requested:</b> “{p.comment}”</Callout></div>}
       {p.status === 'accepted' && !l.wedding_id && <div className="mb-4"><Callout tone="sage" icon={CheckCircle2} action={<Button variant="success" size="sm" icon={Sparkles} onClick={() => nav(`/weddings/new?proposal=${p.id}`)}>Convert to wedding</Button>}>Accepted {ago(p.decided_at)}! Convert it into a pre-populated wedding workspace.</Callout></div>}
@@ -131,7 +131,7 @@ export function LeadDetail() {
                   <td className="px-2 py-2 text-right">{editable ? <input type="number" min={1} aria-label="Quantity" value={it.qty} onChange={e => setQty(i, +e.target.value)} className="h-8 w-20 rounded-lg border border-line px-2 text-right" /> : it.qty}</td>
                   <td className="px-2 py-2 text-right tabular">{editable ? <input type="number" aria-label="Price" value={it.amount} onChange={e => setItems(items.map((x, j) => j === i ? { ...x, amount: +e.target.value } : x))} className="h-8 w-28 rounded-lg border border-line px-2 text-right" /> : inrFull(it.amount)}</td>
                   <td className="px-2 py-2 text-right text-xs text-mute tabular">{inrFull(it.cost)}</td>
-                  <td>{editable && <button aria-label="Remove item" onClick={() => setItems(items.filter((_, j) => j !== i))} className="p-1 text-mute hover:text-rose"><Trash2 className="size-4" /></button>}</td>
+                  <td>{editable && <button aria-label="Remove item" onClick={() => setItems(items.filter((_, j) => j !== i))} className="p-1 text-mute hover:text-bad"><Trash2 className="size-4" /></button>}</td>
                 </tr>
               ))}</tbody>
             </table>
@@ -143,7 +143,7 @@ export function LeadDetail() {
             <div className="space-y-2 text-sm">
               <div className="flex justify-between"><span className="text-mute">Subtotal</span><span className="tabular">{inrFull(subtotal)}</span></div>
               <div className="flex items-center justify-between"><span className="text-mute">Discount</span>{editable ? <span className="flex items-center gap-1"><input type="number" min={0} max={50} aria-label="Discount percent" value={discount} onChange={e => setDiscount(+e.target.value)} className="h-8 w-16 rounded-lg border border-line px-2 text-right" />%</span> : <span>{discount}%</span>}</div>
-              {discount > 15 && me.user.role !== 'owner' && <div className="text-xs text-rose">Discounts above 15% need the owner.</div>}
+              {discount > 15 && me.user.role !== 'owner' && <div className="text-xs text-bad">Discounts above 15% need the owner.</div>}
               <div className="flex justify-between border-t border-line pt-2 text-base font-semibold"><span>Total</span><span className="tabular">{inrFull(total)}</span></div>
               <div className="flex justify-between text-xs"><span className="text-mute">Internal cost</span><span className="tabular">{inrFull(cost)}</span></div>
               <div className="flex items-center justify-between"><span className="text-xs text-mute">Margin</span><Badge tone={margin < 25 ? 'rose' : margin < 35 ? 'amber' : 'sage'}>{margin}%</Badge></div>
@@ -179,7 +179,7 @@ export function Portfolio() {
   return (
     <Page wide>
       <PageHeader title="Portfolio & testimonials" sub="Turn completed weddings into sales assets — with client consent"
-        actions={<><a href={`/studio/${data.slug}`} target="_blank" className="inline-flex h-10 items-center gap-2 rounded-xl border border-line bg-card px-4 text-sm font-semibold hover:bg-sand"><Globe className="size-4" />Public page</a>{me.can['portfolio.edit'] && <Button variant="primary" icon={Plus} onClick={() => setCs({ title: '', summary: '', wedding_id: '', services: [], media_ids: [] })}>New case study</Button>}</>} />
+        actions={<><a href={`/studio/${data.slug}`} target="_blank" className="inline-flex h-10 items-center gap-2 rounded-xl border border-line bg-card px-4 text-sm font-semibold hover:bg-wash"><Globe className="size-4" />Public page</a>{me.can['portfolio.edit'] && <Button variant="primary" icon={Plus} onClick={() => setCs({ title: '', summary: '', wedding_id: '', services: [], media_ids: [] })}>New case study</Button>}</>} />
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {!data.case_studies.length && <Card className="md:col-span-2 xl:col-span-3"><Empty icon={Images} title="No case studies yet" /></Card>}
         {data.case_studies.map((c: any) => (
@@ -202,7 +202,7 @@ export function Portfolio() {
           <CardHeader title="Testimonials" icon={Star} />
           {data.testimonials.length ? <Divided>{data.testimonials.map((t: any) => (
             <div key={t.id} className="px-5 py-4">
-              <div className="flex items-center justify-between gap-2"><div className="text-sm font-semibold">{t.author || 'Awaiting host'} {t.rating ? <span className="text-marigold">{'★'.repeat(t.rating)}</span> : null}</div><Status s={t.status} /></div>
+              <div className="flex items-center justify-between gap-2"><div className="text-sm font-semibold">{t.author || 'Awaiting host'} {t.rating ? <span className="text-haldi">{'★'.repeat(t.rating)}</span> : null}</div><Status s={t.status} /></div>
               <div className="text-xs text-mute">{t.wedding}</div>
               {t.body && <p className="mt-1 text-sm text-ink-2">“{t.body}”</p>}
               {me.can['portfolio.edit'] && t.status === 'submitted' && <div className="mt-2 flex gap-2"><Button size="sm" variant="success" onClick={() => run('t', () => patch(`/testimonials/${t.id}`, { status: 'published' }), 'Published').then(reload)}>Publish</Button><Button size="sm" onClick={() => run('t', () => patch(`/testimonials/${t.id}`, { status: 'private' }), 'Kept private').then(reload)}>Keep private</Button><Button size="sm" variant="ghost" onClick={() => run('t', () => patch(`/testimonials/${t.id}`, { status: 'revision_requested' }), 'Revision requested').then(reload)}>Ask for edit</Button></div>}
@@ -221,7 +221,7 @@ export function Portfolio() {
 function CoverStrip({ ids, wid }: { ids: string[]; wid: string }) {
   const { data } = useApi<any[]>(wid ? `/portfolio/media/${wid}` : null)
   const pics = (data || []).filter(m => (ids || []).includes(m.id)).slice(0, 3)
-  return <div className="grid h-36 grid-cols-3 gap-0.5 bg-sand">{pics.length ? pics.map(m => <img key={m.id} src={fileUrl(m.file)} alt="" className="size-full object-cover" />) : <div className="col-span-3 grid place-items-center text-xs text-mute">No photos selected</div>}</div>
+  return <div className="grid h-36 grid-cols-3 gap-0.5 bg-wash">{pics.length ? pics.map(m => <img key={m.id} src={fileUrl(m.file)} alt="" className="size-full object-cover" />) : <div className="col-span-3 grid place-items-center text-xs text-mute">No photos selected</div>}</div>
 }
 function CaseStudyModal({ c, completed, onClose, onDone }: any) {
   const [f, setF] = useState<any>({})
@@ -230,7 +230,7 @@ function CaseStudyModal({ c, completed, onClose, onDone }: any) {
   useEffect(() => { if (c) setF({ ...c, services: (c.services || []).join(', ') }) }, [c])
   const toggle = (id: string) => setF({ ...f, media_ids: f.media_ids.includes(id) ? f.media_ids.filter((x: string) => x !== id) : [...f.media_ids, id] })
   return (
-    <Modal open={!!c} onClose={onClose} title={f.id ? 'Edit case study' : 'New case study'} size="xl" footer={<>{f.id && <Button variant="ghost" className="mr-auto text-rose" onClick={() => run('d', () => del(`/case-studies/${f.id}`), 'Deleted').then(onDone)}>Delete</Button>}<Button onClick={onClose}>Cancel</Button><Button variant="primary" disabled={!f.title} onClick={() => { const body = { ...f, services: f.services.split(',').map((s: string) => s.trim()).filter(Boolean) }; run('s', () => f.id ? patch(`/case-studies/${f.id}`, body) : post('/case-studies', body), 'Saved').then(onDone) }}>Save</Button></>}>
+    <Modal open={!!c} onClose={onClose} title={f.id ? 'Edit case study' : 'New case study'} size="xl" footer={<>{f.id && <Button variant="ghost" className="mr-auto text-bad" onClick={() => run('d', () => del(`/case-studies/${f.id}`), 'Deleted').then(onDone)}>Delete</Button>}<Button onClick={onClose}>Cancel</Button><Button variant="primary" disabled={!f.title} onClick={() => { const body = { ...f, services: f.services.split(',').map((s: string) => s.trim()).filter(Boolean) }; run('s', () => f.id ? patch(`/case-studies/${f.id}`, body) : post('/case-studies', body), 'Saved').then(onDone) }}>Save</Button></>}>
       <div className="grid gap-3 sm:grid-cols-2">
         <Select label="Wedding" value={f.wedding_id || ''} onChange={e => setF({ ...f, wedding_id: e.target.value, media_ids: [] })} placeholder="Choose…" options={completed.map((w: any) => ({ value: w.id, label: w.name }))} />
         <Input label="Title" value={f.title || ''} onChange={e => setF({ ...f, title: e.target.value })} />
@@ -238,7 +238,7 @@ function CaseStudyModal({ c, completed, onClose, onDone }: any) {
         <Input className="sm:col-span-2" label="Services delivered" value={f.services || ''} onChange={e => setF({ ...f, services: e.target.value })} hint="comma separated" />
       </div>
       {f.wedding_id && <div className="mt-4"><div className="mb-2 text-sm font-semibold">Select photos ({f.media_ids?.length || 0})</div>
-        {!media ? <Loading /> : !media.length ? <p className="text-sm text-mute">No approved public photos for this wedding.</p> : <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">{media.map(m => <button key={m.id} onClick={() => toggle(m.id)} className={cx('relative overflow-hidden rounded-lg border-2', f.media_ids?.includes(m.id) ? 'border-saffron' : 'border-transparent')}><img src={fileUrl(m.file)} alt="" className="aspect-[4/3] w-full object-cover" />{f.media_ids?.includes(m.id) && <CheckCircle2 className="absolute top-1 right-1 size-5 text-white drop-shadow" />}</button>)}</div>}
+        {!media ? <Loading /> : !media.length ? <p className="text-sm text-mute">No approved public photos for this wedding.</p> : <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">{media.map(m => <button key={m.id} onClick={() => toggle(m.id)} className={cx('relative overflow-hidden rounded-lg border-2', f.media_ids?.includes(m.id) ? 'border-brand' : 'border-transparent')}><img src={fileUrl(m.file)} alt="" className="aspect-[4/3] w-full object-cover" />{f.media_ids?.includes(m.id) && <CheckCircle2 className="absolute top-1 right-1 size-5 text-white drop-shadow" />}</button>)}</div>}
       </div>}
     </Modal>
   )
@@ -264,7 +264,7 @@ export function Analytics() {
     <Page wide>
       <PageHeader title="Analytics" sub="Operational and business insight. Every number drills down to the records behind it." actions={<Select aria-label="Scope" className="w-56" value={wid} onChange={e => setWid(e.target.value)} placeholder="All weddings (agency)" options={me.weddings.map(w => ({ value: w.id, label: w.name }))} />} />
       {data.insufficient && <div className="mb-4"><Callout tone="sky">{data.guidance}</Callout></div>}
-      {data.exceptions?.length > 0 && <Card className="mb-5"><CardHeader title="Exceptions worth acting on" icon={AlertTriangle} /><Divided>{data.exceptions.map((x: any, i: number) => <Row key={i} onClick={() => goEx(x)}><span className="size-2 rounded-full bg-marigold" /><div className="flex-1 text-sm font-semibold">{x.title}</div></Row>)}</Divided></Card>}
+      {data.exceptions?.length > 0 && <Card className="mb-5"><CardHeader title="Exceptions worth acting on" icon={AlertTriangle} /><Divided>{data.exceptions.map((x: any, i: number) => <Row key={i} onClick={() => goEx(x)}><span className="size-2 rounded-full bg-haldi" /><div className="flex-1 text-sm font-semibold">{x.title}</div></Row>)}</Divided></Card>}
       <Segmented className="mb-4" value={domain} onChange={setDomain} options={[{ value: 'overview', label: 'Overview' }, { value: 'guests', label: 'Guests & comms' }, { value: 'logistics', label: 'Travel & vendors' }, { value: 'execution', label: 'Tasks & incidents' }, { value: 'finance', label: 'Budget' }, ...(data.sales ? [{ value: 'sales', label: 'Sales' }] : [])]} />
       {domain === 'overview' && <>
         <Grid cols={4} className="mb-5">
@@ -282,7 +282,7 @@ export function Analytics() {
       </>}
       {domain === 'guests' && <div className="grid gap-5 lg:grid-cols-2">
         <Card className="p-5"><div className="mb-4 font-semibold">RSVP</div><div className="space-y-3"><Bar label="Responded" value={data.rsvp.responded} max={data.rsvp.total} sub={`${data.rsvp.responded}/${data.rsvp.total}`} tone="sage" /><Bar label="Attending" value={data.rsvp.attending} max={data.rsvp.total} /><Bar label="Responded via WhatsApp reply" value={data.rsvp.via_wa} max={data.rsvp.responded} /><Bar label="Responded after a reminder" value={data.rsvp.after_reminder} max={data.rsvp.responded} tone="amber" /></div>
-          {data.daily.length > 0 && <div className="mt-5"><div className="mb-2 text-xs font-semibold text-mute">Responses per day</div><div className="flex h-24 items-end gap-1">{data.daily.map((d: any) => <div key={d.day} title={`${d.day}: ${d.n}`} className="flex-1 rounded-t bg-saffron/70" style={{ height: `${Math.max(4, d.n / Math.max(...data.daily.map((x: any) => x.n)) * 100)}%` }} />)}</div></div>}
+          {data.daily.length > 0 && <div className="mt-5"><div className="mb-2 text-xs font-semibold text-mute">Responses per day</div><div className="flex h-24 items-end gap-1">{data.daily.map((d: any) => <div key={d.day} title={`${d.day}: ${d.n}`} className="flex-1 rounded-t bg-brand/70" style={{ height: `${Math.max(4, d.n / Math.max(...data.daily.map((x: any) => x.n)) * 100)}%` }} />)}</div></div>}
         </Card>
         <Card className="p-5"><div className="mb-4 font-semibold">Messaging</div><div className="space-y-3"><Bar label="Delivered" value={data.msgs.delivered} max={data.msgs.total} sub={`${data.msgs.delivered}/${data.msgs.total}`} tone="sage" /><Bar label="Read" value={data.msgs.read} max={data.msgs.total} tone="sky" />{data.fail_reasons.map((r: any) => <Bar key={r.reason} label={`Failed: ${titleCase(r.reason)}`} value={r.n} max={data.msgs.total} sub={r.n} tone="rose" />)}</div></Card>
       </div>}
@@ -325,8 +325,8 @@ export function Team() {
           { key: 't', label: 'Title', mobile: 'sub', render: m => m.title || '—' },
           { key: 'w', label: 'Weddings', render: m => m.weddings },
           { key: 'o', label: 'Open tasks', render: m => m.open_tasks },
-          { key: 'a', label: 'Availability', render: m => (m.unavailable || []).length ? <span className="text-xs text-amber">{m.unavailable.map((u: any) => `${date(u.from)}–${date(u.to)}`).join(', ')}</span> : <span className="text-xs text-mute">available</span> },
-          { key: 's', label: 'Status', render: m => <span className="flex items-center gap-1.5"><Status s={m.status} />{m.status === 'invited' && me.can.team && <button className="text-xs font-semibold text-saffron" onClick={e => { e.stopPropagation(); post(`/team/${m.id}/resend`).then((r: any) => { navigator.clipboard?.writeText(location.origin + r.invite_link); toast('Invite re-sent — link copied') }) }}>Resend</button>}</span> },
+          { key: 'a', label: 'Availability', render: m => (m.unavailable || []).length ? <span className="text-xs text-warn">{m.unavailable.map((u: any) => `${date(u.from)}–${date(u.to)}`).join(', ')}</span> : <span className="text-xs text-mute">available</span> },
+          { key: 's', label: 'Status', render: m => <span className="flex items-center gap-1.5"><Status s={m.status} />{m.status === 'invited' && me.can.team && <button className="text-xs font-semibold text-brand" onClick={e => { e.stopPropagation(); post(`/team/${m.id}/resend`).then((r: any) => { navigator.clipboard?.writeText(location.origin + r.invite_link); toast('Invite re-sent — link copied') }) }}>Resend</button>}</span> },
         ]} />
       </Card>
       <Card className="mt-5"><CardHeader title="Assignments" sub="Who is on which wedding" />
@@ -369,7 +369,7 @@ function MemberModal({ m, keys, members, onClose, onDone }: any) {
   const deactivate = async () => { try { await raw('d', () => patch(`/team/${m.id}`, { status: 'deactivated', reassign_to: to || undefined })); onDone() } catch (e: any) { if (e.status === 409) setDeact(e.detail) } }
   const admin = me.can.team && m.role !== 'owner'
   return (
-    <Modal open={!!m} onClose={onClose} title={m.name} sub={m.email} size="lg" footer={<>{admin && m.status === 'active' && m.id !== me.user.id && <><Button variant="ghost" className="mr-auto text-rose" onClick={deactivate}>Deactivate</Button><Button variant="ghost" onClick={() => save({ status: 'suspended' })}>Suspend</Button></>}{admin && m.status !== 'active' && m.status !== 'invited' && <Button className="mr-auto" onClick={() => save({ status: 'active' })}>Reactivate</Button>}{m.status === 'invited' && admin && <Button variant="ghost" className="mr-auto text-rose" onClick={() => run('r', () => post(`/team/${m.id}/revoke`), 'Invite revoked').then(onDone)}>Revoke invite</Button>}<Button onClick={onClose}>Cancel</Button><Button variant="primary" onClick={() => save({ title: f.title, role: admin ? f.role : undefined, permissions: admin ? f.permissions : undefined, unavailable: f.unavailable })}>Save</Button></>}>
+    <Modal open={!!m} onClose={onClose} title={m.name} sub={m.email} size="lg" footer={<>{admin && m.status === 'active' && m.id !== me.user.id && <><Button variant="ghost" className="mr-auto text-bad" onClick={deactivate}>Deactivate</Button><Button variant="ghost" onClick={() => save({ status: 'suspended' })}>Suspend</Button></>}{admin && m.status !== 'active' && m.status !== 'invited' && <Button className="mr-auto" onClick={() => save({ status: 'active' })}>Reactivate</Button>}{m.status === 'invited' && admin && <Button variant="ghost" className="mr-auto text-bad" onClick={() => run('r', () => post(`/team/${m.id}/revoke`), 'Invite revoked').then(onDone)}>Revoke invite</Button>}<Button onClick={onClose}>Cancel</Button><Button variant="primary" onClick={() => save({ title: f.title, role: admin ? f.role : undefined, permissions: admin ? f.permissions : undefined, unavailable: f.unavailable })}>Save</Button></>}>
       {deact && <div className="mb-4 space-y-2"><Callout tone="amber" icon={AlertTriangle}>{m.name} owns {deact.open_tasks} open task(s) on {deact.weddings} wedding(s). Choose who takes over.</Callout><div className="flex gap-2"><Select className="flex-1" aria-label="Reassign to" value={to} onChange={e => setTo(e.target.value)} placeholder="Reassign to…" options={members.filter((x: any) => x.id !== m.id && x.status === 'active').map((x: any) => ({ value: x.id, label: x.name }))} /><Button variant="danger" disabled={!to} onClick={deactivate}>Reassign & deactivate</Button></div></div>}
       <div className="space-y-4">
         <div className="grid gap-3 sm:grid-cols-2"><Input label="Title" value={f.title || ''} onChange={e => setF({ ...f, title: e.target.value })} />{admin && <Select label="Role" value={f.role} onChange={e => setF({ ...f, role: e.target.value })} options={[{ value: 'coordinator', label: 'Coordinator' }, { value: 'planner', label: 'Planner' }]} />}</div>
@@ -410,7 +410,7 @@ export function VendorDirectory() {
           { key: 'a', label: 'Assignments', render: v => v.assignments },
         ]} />
       </Card>
-      <Modal open={!!e} onClose={() => setE(null)} title={e?.id ? e.name : 'Add vendor'} size="md" footer={<>{e?.id && <Button variant="ghost" className="mr-auto text-rose" onClick={() => run('d', () => del(`/vendors/${e.id}`), 'Removed').then(() => { setE(null); reload() })}>Remove</Button>}<Button onClick={() => setE(null)}>Cancel</Button><Button variant="primary" disabled={!e?.name} onClick={() => save()}>Save</Button></>}>
+      <Modal open={!!e} onClose={() => setE(null)} title={e?.id ? e.name : 'Add vendor'} size="md" footer={<>{e?.id && <Button variant="ghost" className="mr-auto text-bad" onClick={() => run('d', () => del(`/vendors/${e.id}`), 'Removed').then(() => { setE(null); reload() })}>Remove</Button>}<Button onClick={() => setE(null)}>Cancel</Button><Button variant="primary" disabled={!e?.name} onClick={() => save()}>Save</Button></>}>
         {e && <div className="grid gap-3 sm:grid-cols-2"><Input className="sm:col-span-2" label="Business name" value={e.name} onChange={x => setE({ ...e, name: x.target.value })} /><Select label="Type" value={e.kind} onChange={x => setE({ ...e, kind: x.target.value })} options={['Decorator', 'Caterer', 'Photographer', 'Videographer', 'DJ', 'Band', 'Mehendi Artist', 'Makeup Artist', 'Officiant', 'Driver', 'Florist', 'Lighting', 'Other']} /><Input label="City" value={e.city || ''} onChange={x => setE({ ...e, city: x.target.value })} /><Input label="Contact person" value={e.contact || ''} onChange={x => setE({ ...e, contact: x.target.value })} /><Input label="WhatsApp" value={e.phone || ''} onChange={x => setE({ ...e, phone: x.target.value })} /><Input label="Email" value={e.email || ''} onChange={x => setE({ ...e, email: x.target.value })} /><Input label="Rating" type="number" step="0.1" min={0} max={5} value={e.rating ?? ''} onChange={x => setE({ ...e, rating: +x.target.value })} /><Textarea className="sm:col-span-2" label="Notes" value={e.notes || ''} onChange={x => setE({ ...e, notes: x.target.value })} /></div>}
       </Modal>
     </Page>
@@ -475,7 +475,7 @@ function RuleEditor({ r, data, templates, onClose, onDone }: any) {
   const setA = (i: number, p: any) => setF({ ...f, actions: f.actions.map((a: any, j: number) => j === i ? { ...a, ...p } : a) })
   return (
     <Modal open={!!r} onClose={onClose} title={f.id ? `Edit · ${f.name}` : 'New automation'} sub={f.id ? 'Editing creates a new version; in-flight runs keep the old one' : undefined} size="xl"
-      footer={<>{f.id && <Button variant="ghost" className="mr-auto text-rose" onClick={() => run('d', () => del(`/automations/${f.id}`), 'Deleted').then(onDone)}>Delete</Button>}<Button onClick={() => run('t', () => post('/automations/test', f)).then(setTest)}>Test with sample data</Button><Button variant="primary" disabled={!f.name} loading={busy === 's'} onClick={() => run('s', () => f.id ? patch(`/automations/${f.id}`, f) : post('/automations', f), 'Saved (enable it from the list)').then(onDone)}>Save</Button></>}>
+      footer={<>{f.id && <Button variant="ghost" className="mr-auto text-bad" onClick={() => run('d', () => del(`/automations/${f.id}`), 'Deleted').then(onDone)}>Delete</Button>}<Button onClick={() => run('t', () => post('/automations/test', f)).then(setTest)}>Test with sample data</Button><Button variant="primary" disabled={!f.name} loading={busy === 's'} onClick={() => run('s', () => f.id ? patch(`/automations/${f.id}`, f) : post('/automations', f), 'Saved (enable it from the list)').then(onDone)}>Save</Button></>}>
       <div className="space-y-5">
         {test && <Callout tone={test.ok ? 'sage' : 'rose'} icon={test.ok ? CheckCircle2 : AlertTriangle}>{test.ok ? `Configuration valid. Sample event ${test.sample_matches ? 'matches' : 'does not match'} the conditions.` : <ul className="list-disc pl-4">{test.errors.map((e: string) => <li key={e}>{e}</li>)}</ul>}</Callout>}
         <div className="grid gap-3 sm:grid-cols-2"><Input label="Name" value={f.name || ''} onChange={e => setF({ ...f, name: e.target.value })} /><Select label="Scope" value={f.wedding_id || ''} onChange={e => setF({ ...f, wedding_id: e.target.value || null })} placeholder="All weddings" options={me.weddings.map(w => ({ value: w.id, label: w.name }))} /></div>
@@ -522,7 +522,7 @@ export function Settings() {
     <Page wide>
       <PageHeader title="Settings & administration" sub={data.name} />
       <div className="grid gap-5 lg:grid-cols-[220px_1fr]">
-        <nav className="scroll-x flex gap-1 lg:flex-col">{SECS.map(([k, l, Ic]) => <button key={k} onClick={() => setSec(k)} className={cx('flex h-9 shrink-0 items-center gap-2 rounded-lg px-3 text-sm font-medium', sec === k ? 'bg-ink text-paper' : 'text-ink-2 hover:bg-sand')}><Ic className="size-4" />{l}</button>)}</nav>
+        <nav className="scroll-x flex gap-1 lg:flex-col">{SECS.map(([k, l, Ic]) => <button key={k} onClick={() => setSec(k)} className={cx('flex h-9 shrink-0 items-center gap-2 rounded-lg px-3 text-sm font-medium', sec === k ? 'bg-ink text-canvas' : 'text-ink-2 hover:bg-wash')}><Ic className="size-4" />{l}</button>)}</nav>
         <Card className="p-5 sm:p-6">
           {sec === 'profile' && <div className="space-y-3"><div className="grid gap-3 sm:grid-cols-2"><Input label="Agency name" value={f.name || ''} onChange={e => setF({ ...f, name: e.target.value })} /><Input label="Public URL slug" value={f.slug || ''} onChange={e => setF({ ...f, slug: e.target.value })} hint={`/studio/${f.slug}`} /><Input label="Tagline" value={f.tagline || ''} onChange={e => setF({ ...f, tagline: e.target.value })} /><Input label="City" value={f.city || ''} onChange={e => setF({ ...f, city: e.target.value })} /></div><Textarea label="About (portfolio page)" rows={4} value={f.about || ''} onChange={e => setF({ ...f, about: e.target.value })} /><Button variant="dark" loading={busy === 's'} onClick={() => save('profile', { name: f.name, slug: f.slug, tagline: f.tagline, about: f.about, city: f.city })}>Save</Button></div>}
           {sec === 'branding' && <div className="space-y-3"><div className="grid gap-3 sm:grid-cols-3"><Input label="Logo text" {...I('branding', 'logo_text')} /><Input label="Primary colour" type="color" {...I('branding', 'color')} /><Input label="Accent colour" type="color" {...I('branding', 'accent')} /></div><div className="rounded-2xl p-6 text-white" style={{ background: f.branding?.color }}><div className="display text-2xl">{f.branding?.logo_text || f.name}</div><div className="mt-1 text-sm opacity-80">Preview of guest & proposal pages</div><div className="mt-3 inline-block rounded-lg px-3 py-1 text-sm font-semibold text-ink" style={{ background: f.branding?.accent }}>RSVP now</div></div><Button variant="dark" onClick={() => save('branding', f.branding)}>Save</Button></div>}
@@ -558,7 +558,7 @@ function AuditLog() {
   return (
     <div>
       <div className="mb-3 flex flex-wrap items-center gap-3"><Input className="flex-1" aria-label="Filter" placeholder="Filter by action or person" value={q} onChange={e => setQ(e.target.value)} /><Check label="Blocked actions only" checked={denied} onChange={setDenied} /></div>
-      {!data ? <Loading /> : <div className="max-h-[560px] divide-y divide-line overflow-y-auto rounded-xl border border-line">{data.map(a => <div key={a.id} className={cx('flex gap-3 px-3 py-2 text-xs', !a.allowed && 'bg-rose-50/50')}><span className="w-28 shrink-0 text-mute">{dateTime(a.created_at)}</span><span className="flex-1"><b>{a.actor_name}</b> <span className="text-mute">({a.actor_kind})</span> · {a.action}{a.detail ? <span className="text-mute"> · {a.detail.slice(0, 80)}</span> : ''}</span>{!a.allowed && <Badge tone="rose">blocked</Badge>}</div>)}</div>}
+      {!data ? <Loading /> : <div className="max-h-[560px] divide-y divide-line overflow-y-auto rounded-xl border border-line">{data.map(a => <div key={a.id} className={cx('flex gap-3 px-3 py-2 text-xs', !a.allowed && 'bg-bad-50/50')}><span className="w-28 shrink-0 text-mute">{dateTime(a.created_at)}</span><span className="flex-1"><b>{a.actor_name}</b> <span className="text-mute">({a.actor_kind})</span> · {a.action}{a.detail ? <span className="text-mute"> · {a.detail.slice(0, 80)}</span> : ''}</span>{!a.allowed && <Badge tone="rose">blocked</Badge>}</div>)}</div>}
     </div>
   )
 }
@@ -573,7 +573,7 @@ function DataSection() {
   return (
     <div className="space-y-6">
       <div><div className="font-semibold">Export</div><p className="mb-2 text-sm text-mute">Weddings, guests, RSVPs, vendors, tasks and expenses as JSON.</p><Button icon={Download} onClick={exportData}>Download export</Button></div>
-      <div className="rounded-2xl border border-rose/30 p-4"><div className="font-semibold text-rose">Permanently delete a wedding</div><p className="mb-3 text-sm text-mute">Owner only. Removes every guest, message, file reference and link. This can't be undone.</p>
+      <div className="rounded-2xl border border-bad/30 p-4"><div className="font-semibold text-bad">Permanently delete a wedding</div><p className="mb-3 text-sm text-mute">Owner only. Removes every guest, message, file reference and link. This can't be undone.</p>
         <div className="grid gap-3 sm:grid-cols-2"><Select label="Wedding" value={wid} onChange={e => { setWid(e.target.value); setTyped('') }} placeholder="Choose…" options={me.weddings.map(x => ({ value: x.id, label: x.name }))} />{w && <Input label={`Type “${w.name}” to confirm`} value={typed} onChange={e => setTyped(e.target.value)} />}</div>
         <Button className="mt-3" variant="danger" disabled={!w || typed !== w.name || me.user.role !== 'owner'} loading={busy === 'del'} onClick={() => run('del', () => post('/settings/delete-wedding', { wedding_id: wid, confirm: typed }), 'Wedding deleted').then(() => { setWid(''); refresh() })}>Delete permanently</Button>
       </div>

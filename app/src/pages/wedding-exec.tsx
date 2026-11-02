@@ -43,10 +43,10 @@ export function Tasks({ scoped }: { scoped?: boolean }) {
         {!data ? <Loading /> : view === 'list' ? (
           <Card>
             <DataTable rows={data} rowKey={t => t.id} onRow={setOpen} empty={<Empty icon={CheckCircle2} title="No tasks here" />} cols={[
-              { key: 't', label: 'Task', mobile: 'title', render: t => <span className="flex items-center gap-2"><span className={cx('size-2 shrink-0 rounded-full', t.priority === 'high' ? 'bg-rose' : t.priority === 'medium' ? 'bg-marigold' : 'bg-line')} /><span className={cx('font-semibold', t.status === 'done' && 'text-mute line-through')}>{t.title}</span>{t.escalated ? <Badge tone="rose">escalated</Badge> : null}{(t.depends_on || []).length > 0 && <Badge>depends on {t.depends_on.length}</Badge>}</span> },
+              { key: 't', label: 'Task', mobile: 'title', render: t => <span className="flex items-center gap-2"><span className={cx('size-2 shrink-0 rounded-full', t.priority === 'high' ? 'bg-bad' : t.priority === 'medium' ? 'bg-haldi' : 'bg-line')} /><span className={cx('font-semibold', t.status === 'done' && 'text-mute line-through')}>{t.title}</span>{t.escalated ? <Badge tone="rose">escalated</Badge> : null}{(t.depends_on || []).length > 0 && <Badge>depends on {t.depends_on.length}</Badge>}</span> },
               ...(!scoped ? [{ key: 'w', label: 'Wedding', mobile: 'sub' as const, render: (t: any) => t.wedding || 'Agency' }] : []),
-              { key: 'o', label: 'Owner', render: t => t.owner_name || <span className="text-amber">unassigned</span> },
-              { key: 'd', label: 'Due', render: t => t.due_at ? <span className={cx(t.status !== 'done' && t.due_at < new Date().toISOString() && 'font-semibold text-rose')}>{dateTime(t.due_at)}</span> : '—' },
+              { key: 'o', label: 'Owner', render: t => t.owner_name || <span className="text-warn">unassigned</span> },
+              { key: 'd', label: 'Due', render: t => t.due_at ? <span className={cx(t.status !== 'done' && t.due_at < new Date().toISOString() && 'font-semibold text-bad')}>{dateTime(t.due_at)}</span> : '—' },
               { key: 'c', label: 'Checklist', mobile: 'hide', render: t => (t.checklist || []).length ? <span className="text-xs">{t.checklist.filter((c: any) => c.done).length}/{t.checklist.length}</span> : null },
               { key: 's', label: 'Status', render: t => <Status s={t.status} /> },
             ]} />
@@ -54,13 +54,13 @@ export function Tasks({ scoped }: { scoped?: boolean }) {
         ) : (
           <div className="scroll-x -mx-4 flex gap-3 px-4 pb-2">
             {COLS.map(c => (
-              <div key={c} className="w-72 shrink-0 rounded-2xl bg-sand/60 p-2">
+              <div key={c} className="w-72 shrink-0 rounded-2xl bg-wash/60 p-2">
                 <div className="mb-2 flex items-center justify-between px-2 pt-1"><Status s={c} /><span className="text-xs text-mute">{data.filter(t => t.status === c).length}</span></div>
                 <div className="space-y-2">{data.filter(t => t.status === c).map(t => (
-                  <button key={t.id} onClick={() => setOpen(t)} className="w-full rounded-xl border border-line bg-card p-3 text-left shadow-card hover:border-saffron/40">
+                  <button key={t.id} onClick={() => setOpen(t)} className="w-full rounded-xl border border-line bg-card p-3 text-left shadow-card hover:border-brand/40">
                     <div className="text-sm font-semibold">{t.title}</div>
-                    <div className="mt-1 flex items-center justify-between text-xs text-mute"><span>{t.owner_name || 'unassigned'}</span><span className={cx(t.due_at < new Date().toISOString() && t.status !== 'done' && 'text-rose')}>{t.due_at ? date(t.due_at) : ''}</span></div>
-                    {t.blocked_reason && t.status === 'blocked' && <div className="mt-1.5 text-xs text-rose">⛔ {t.blocked_reason}</div>}
+                    <div className="mt-1 flex items-center justify-between text-xs text-mute"><span>{t.owner_name || 'unassigned'}</span><span className={cx(t.due_at < new Date().toISOString() && t.status !== 'done' && 'text-bad')}>{t.due_at ? date(t.due_at) : ''}</span></div>
+                    {t.blocked_reason && t.status === 'blocked' && <div className="mt-1.5 text-xs text-bad">⛔ {t.blocked_reason}</div>}
                   </button>
                 ))}</div>
               </div>
@@ -106,7 +106,7 @@ function TaskDrawer({ task, members, onClose, onChanged }: any) {
         {['todo', 'in_progress'].includes(t.status) && <Button variant="success" icon={CheckIcon} loading={busy === 'complete'} onClick={() => t.requires_proof && !t.proof ? setMode('proof') : act('complete')}>Complete</Button>}
         {t.status === 'review' && me.admin && <><Button variant="success" onClick={() => act('approve')}>Approve</Button><Button onClick={() => setMode('rework')}>Return for rework</Button></>}
         {t.status === 'done' && <Button icon={RotateCcw} onClick={() => act('reopen')}>Reopen</Button>}
-        <Button variant="ghost" className="ml-auto text-rose" icon={Trash2} onClick={() => window.confirm('Delete this task?') && del(`/tasks/${t.id}`).then(() => { onChanged(); onClose() })}>Delete</Button>
+        <Button variant="ghost" className="ml-auto text-bad" icon={Trash2} onClick={() => window.confirm('Delete this task?') && del(`/tasks/${t.id}`).then(() => { onChanged(); onClose() })}>Delete</Button>
       </div>}>
       <div className="space-y-4">
         <div className="flex flex-wrap gap-2"><Status s={t.status} /><Badge tone={t.priority === 'high' ? 'rose' : t.priority === 'medium' ? 'amber' : 'neutral'}>{t.priority} priority</Badge>{t.requires_proof ? <Badge tone="sky">proof required</Badge> : null}{overdue && <Badge tone="rose">overdue</Badge>}</div>
@@ -115,7 +115,7 @@ function TaskDrawer({ task, members, onClose, onChanged }: any) {
         {mode === 'block' && <div className="flex gap-2"><Input className="flex-1" value={reason} onChange={e => setReason(e.target.value)} placeholder="What's blocking this?" aria-label="Blocker" /><Button variant="danger" disabled={!reason} onClick={() => act('block', { reason })}>Mark blocked</Button></div>}
         {mode === 'proof' && <div className="space-y-2"><Textarea label="Proof of completion" value={proof} onChange={e => setProof(e.target.value)} placeholder="Photo link, note, or document name" /><Button variant="success" disabled={!proof} onClick={() => act('complete', { proof })}>Submit for review</Button></div>}
         {mode === 'rework' && <div className="flex gap-2"><Input className="flex-1" value={reason} onChange={e => setReason(e.target.value)} placeholder="What needs to change?" aria-label="Rework note" /><Button onClick={() => act('rework', { note: reason })}>Send back</Button></div>}
-        {t.proof && <div className="rounded-xl bg-paper p-3 text-sm"><div className="text-xs font-semibold text-mute">Proof</div>{t.proof}</div>}
+        {t.proof && <div className="rounded-xl bg-canvas p-3 text-sm"><div className="text-xs font-semibold text-mute">Proof</div>{t.proof}</div>}
         <div className="grid gap-3 sm:grid-cols-3">
           <Select label="Owner" value={t.owner_id || ''} onChange={e => save({ owner_id: e.target.value || null })} placeholder="Unassigned" options={members.map((m: any) => ({ value: m.id, label: m.name }))} />
           <Input label="Due" type="datetime-local" value={toLocalInput(t.due_at)} onChange={e => save({ due_at: fromLocalInput(e.target.value) })} hint={overdue ? 'extend to de-escalate' : undefined} />
@@ -160,7 +160,7 @@ function SopLibrary({ sops }: { sops: any[] }) {
     <Card>
       <CardHeader title="Standard operating procedures" sub="Reusable task plans applied to weddings" action={<Button size="sm" icon={Plus} onClick={() => setE({ name: '', description: '', steps: [] })}>New SOP</Button>} />
       <Divided>{list.map(s => <Row key={s.id} onClick={() => setE(s)}><div className="flex-1"><div className="font-semibold">{s.name}</div><div className="text-xs text-mute">{s.steps?.length} steps · {s.description}</div></div></Row>)}</Divided>
-      <Modal open={!!e} onClose={() => setE(null)} title={e?.id ? 'Edit SOP' : 'New SOP'} size="lg" footer={<>{e?.id && <Button variant="ghost" className="mr-auto text-rose" onClick={() => run('d', () => del(`/sops/${e.id}`), 'Deleted').then(() => { setE(null); reload() })}>Delete</Button>}<Button onClick={() => setE(null)}>Cancel</Button><Button variant="primary" onClick={() => run('s', () => e.id ? patch(`/sops/${e.id}`, e) : post('/sops', e), 'SOP saved').then(() => { setE(null); reload() })}>Save</Button></>}>
+      <Modal open={!!e} onClose={() => setE(null)} title={e?.id ? 'Edit SOP' : 'New SOP'} size="lg" footer={<>{e?.id && <Button variant="ghost" className="mr-auto text-bad" onClick={() => run('d', () => del(`/sops/${e.id}`), 'Deleted').then(() => { setE(null); reload() })}>Delete</Button>}<Button onClick={() => setE(null)}>Cancel</Button><Button variant="primary" onClick={() => run('s', () => e.id ? patch(`/sops/${e.id}`, e) : post('/sops', e), 'SOP saved').then(() => { setE(null); reload() })}>Save</Button></>}>
         {e && <div className="space-y-3">
           <Input label="Name" value={e.name} onChange={x => setE({ ...e, name: x.target.value })} /><Input label="Description" value={e.description || ''} onChange={x => setE({ ...e, description: x.target.value })} />
           <div className="text-sm font-semibold">Steps</div>
@@ -175,7 +175,7 @@ function SopLibrary({ sops }: { sops: any[] }) {
 // =====================================================================
 // Master calendar
 // =====================================================================
-const TYPE_COLOR: Record<string, string> = { function: 'bg-saffron text-white', task: 'bg-sky-50 text-sky', vendor: 'bg-amber-50 text-amber', travel: 'bg-sage-50 text-sage', room: 'bg-sand text-ink-2', event: 'bg-ink text-paper' }
+const TYPE_COLOR: Record<string, string> = { function: 'bg-brand text-white', task: 'bg-info-50 text-info', vendor: 'bg-warn-50 text-warn', travel: 'bg-ok-50 text-ok', room: 'bg-wash text-ink-2', event: 'bg-ink text-canvas' }
 export function Calendar({ scoped }: { scoped?: boolean }) {
   const { wid } = useParams()
   const me = useMe()
@@ -229,17 +229,17 @@ export function Calendar({ scoped }: { scoped?: boolean }) {
         <Segmented value={view} onChange={setView} options={[{ value: 'month', label: 'Month' }, { value: 'agenda', label: 'Agenda' }]} />
         {!scoped && <Select aria-label="Wedding" className="w-44" value={weddingF} onChange={e => setWeddingF(e.target.value)} placeholder="All weddings" options={me.weddings.map(w => ({ value: w.id, label: w.name }))} />}
         <Select aria-label="Team member" className="w-40" value={owner} onChange={e => setOwner(e.target.value)} placeholder="Everyone" options={(team?.members || []).map((m: any) => ({ value: m.id, label: m.name }))} />
-        <div className="flex flex-wrap gap-1.5">{Object.keys(TYPE_COLOR).map(t => <button key={t} onClick={() => setTypes(types.includes(t) ? types.filter(x => x !== t) : [...types, t])} className={cx('rounded-full px-2.5 py-1 text-xs font-semibold capitalize', types.includes(t) ? TYPE_COLOR[t] : 'bg-sand text-mute line-through')}>{t}</button>)}</div>
+        <div className="flex flex-wrap gap-1.5">{Object.keys(TYPE_COLOR).map(t => <button key={t} onClick={() => setTypes(types.includes(t) ? types.filter(x => x !== t) : [...types, t])} className={cx('rounded-full px-2.5 py-1 text-xs font-semibold capitalize', types.includes(t) ? TYPE_COLOR[t] : 'bg-wash text-mute line-through')}>{t}</button>)}</div>
       </div>
       {!data ? <Loading /> : view === 'month' ? (
         <Card className="overflow-hidden">
-          <div className="grid grid-cols-7 border-b border-line bg-paper text-center text-xs font-semibold text-mute">{['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => <div key={d} className="py-2">{d}</div>)}</div>
+          <div className="grid grid-cols-7 border-b border-line bg-canvas text-center text-xs font-semibold text-mute">{['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => <div key={d} className="py-2">{d}</div>)}</div>
           <div className="grid grid-cols-7">
             {days.map(d => {
               const k = key(d), list = byDay.get(k) || [], other = d.getMonth() !== cursor.getMonth()
               return (
-                <div key={k} onDragOver={e => e.preventDefault()} onDrop={() => drop(d)} className={cx('min-h-28 border-r border-b border-line p-1.5', other && 'bg-paper/60')}>
-                  <div className={cx('mb-1 grid size-6 place-items-center rounded-full text-xs font-semibold', k === today ? 'bg-saffron text-white' : other ? 'text-mute/60' : 'text-ink-2')}>{d.getDate()}</div>
+                <div key={k} onDragOver={e => e.preventDefault()} onDrop={() => drop(d)} className={cx('min-h-28 border-r border-b border-line p-1.5', other && 'bg-canvas/60')}>
+                  <div className={cx('mb-1 grid size-6 place-items-center rounded-full text-xs font-semibold', k === today ? 'bg-brand text-white' : other ? 'text-mute/60' : 'text-ink-2')}>{d.getDate()}</div>
                   <div className="space-y-0.5">{list.slice(0, 4).map(i => (
                     <button key={i.type + i.id} draggable={i.editable} onDragStart={() => { (window as any).__drag = i.id }} onClick={() => open(i)} title={`${i.title}${i.wedding ? ` · ${i.wedding}` : ''}`}
                       className={cx('block w-full truncate rounded px-1.5 py-0.5 text-left text-[11px] font-semibold', TYPE_COLOR[i.type], i.editable && 'cursor-grab')}>{i.type !== 'function' && time(i.start) !== '12:00 am' ? `${time(i.start).replace(':00', '')} ` : ''}{i.title}</button>
@@ -254,10 +254,10 @@ export function Calendar({ scoped }: { scoped?: boolean }) {
           {!items.length ? <Empty icon={CalIcon} title="Nothing scheduled" /> : <Divided>
             {[...byDay.entries()].sort(([a], [b]) => a.localeCompare(b)).filter(([k]) => k >= key(new Date(cursor.getFullYear(), cursor.getMonth(), 1))).map(([k, list]) => (
               <div key={k} className="flex gap-4 px-4 py-3 sm:px-5">
-                <div className="w-14 shrink-0 text-center"><div className="text-[11px] font-semibold uppercase text-mute">{date(k, { weekday: 'short' })}</div><div className={cx('text-xl font-semibold', k === today && 'text-saffron')}>{date(k, { day: 'numeric' })}</div><div className="text-[11px] text-mute">{date(k, { month: 'short' })}</div></div>
+                <div className="w-14 shrink-0 text-center"><div className="text-[11px] font-semibold text-mute">{date(k, { weekday: 'short' })}</div><div className={cx('text-xl font-semibold', k === today && 'text-brand')}>{date(k, { day: 'numeric' })}</div><div className="text-[11px] text-mute">{date(k, { month: 'short' })}</div></div>
                 <div className="flex-1 space-y-1.5">{list.map(i => (
-                  <button key={i.type + i.id} onClick={() => open(i)} className="flex w-full items-center gap-3 rounded-xl px-2 py-1.5 text-left hover:bg-paper">
-                    <span className={cx('rounded px-1.5 py-0.5 text-[10px] font-bold uppercase', TYPE_COLOR[i.type])}>{i.type}</span>
+                  <button key={i.type + i.id} onClick={() => open(i)} className="flex w-full items-center gap-3 rounded-xl px-2 py-1.5 text-left hover:bg-canvas">
+                    <span className={cx('rounded px-1.5 py-0.5 text-[10px] font-bold', TYPE_COLOR[i.type])}>{i.type}</span>
                     <span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold">{i.title}</span><span className="block truncate text-xs text-mute">{time(i.start)}{i.wedding && !scoped ? ` · ${i.wedding}` : ''}{i.owner ? ` · ${i.owner}` : ''}{i.location ? ` · ${i.location}` : ''}</span></span>
                     {i.status && <Status s={i.status} />}
                   </button>
@@ -287,7 +287,7 @@ function EventModal({ e, onClose, onDone, members }: any) {
     catch (x: any) { if (x.status === 409) setConf(x.detail?.conflicts || [x.message]); else toast(x.message, 'error') }
   }
   return (
-    <Modal open={!!e} onClose={onClose} title={f.id ? 'Edit event' : 'New event'} size="md" footer={<>{f.id && <Button variant="ghost" className="mr-auto text-rose" onClick={() => del(`/events/${f.id}`).then(onDone)}>Delete</Button>}<Button onClick={onClose}>Cancel</Button>{conf ? <Button variant="danger" onClick={() => save(true)}>Save with warning</Button> : <Button variant="primary" disabled={!f.title || !f.start_at} onClick={() => save()}>Save</Button>}</>}>
+    <Modal open={!!e} onClose={onClose} title={f.id ? 'Edit event' : 'New event'} size="md" footer={<>{f.id && <Button variant="ghost" className="mr-auto text-bad" onClick={() => del(`/events/${f.id}`).then(onDone)}>Delete</Button>}<Button onClick={onClose}>Cancel</Button>{conf ? <Button variant="danger" onClick={() => save(true)}>Save with warning</Button> : <Button variant="primary" disabled={!f.title || !f.start_at} onClick={() => save()}>Save</Button>}</>}>
       {conf && <div className="mb-3"><Callout tone="amber" icon={AlertTriangle}><b>Conflict detected</b><ul className="mt-1 list-disc pl-4">{conf.map(c => <li key={c}>{c}</li>)}</ul></Callout></div>}
       <div className="grid gap-3 sm:grid-cols-2">
         <Input className="sm:col-span-2" label="Title" value={f.title || ''} onChange={x => setF({ ...f, title: x.target.value })} />
@@ -329,10 +329,10 @@ export function Live() {
   const open = data.incidents.filter((i: any) => i.status !== 'resolved')
   return (
     <div className="mx-auto max-w-[1600px] px-3 py-4 sm:px-5">
-      <div className={cx('mb-4 flex flex-col gap-3 rounded-2xl p-4 sm:flex-row sm:items-center sm:justify-between', cur ? 'bg-ink text-paper' : 'border border-line bg-card')}>
+      <div className={cx('mb-4 flex flex-col gap-3 rounded-2xl p-4 sm:flex-row sm:items-center sm:justify-between', cur ? 'bg-ink text-canvas' : 'border border-line bg-card')}>
         <div className="flex items-center gap-3">
           {cur ? <span className="relative flex size-3"><span className="live-dot absolute inline-flex size-full rounded-full bg-[#ff6b6b]" /><span className="relative inline-flex size-3 rounded-full bg-[#ff6b6b]" /></span> : <Radio className="size-5 text-mute" />}
-          <div><div className={cx('text-xs font-semibold uppercase tracking-[0.14em]', cur ? 'text-marigold' : 'text-mute')}>{cur ? 'Live now' : data.wedding.status === 'completed' ? 'Wrapped' : 'Wedding Day Mode'}</div><div className="text-xl font-semibold">{cur ? `${cur.name} · ${cur.venue}` : 'No function running'}</div>{cur && <div className="text-xs text-paper/60">{hhmm(cur.start_time)}–{hhmm(cur.end_time)} · dress code: {cur.dress_code || '—'}</div>}</div>
+          <div><div className={cx('text-xs font-semibold', cur ? 'text-haldi' : 'text-mute')}>{cur ? 'Live now' : data.wedding.status === 'completed' ? 'Wrapped' : 'Wedding Day Mode'}</div><div className="text-xl font-semibold">{cur ? `${cur.name} · ${cur.venue}` : 'No function running'}</div>{cur && <div className="text-xs text-canvas/60">{hhmm(cur.start_time)}–{hhmm(cur.end_time)} · dress code: {cur.dress_code || '—'}</div>}</div>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant={cur ? 'secondary' : 'secondary'} icon={Megaphone} onClick={() => setBc(true)}>Broadcast update</Button>
@@ -354,7 +354,7 @@ export function Live() {
             <CardHeader title="Incidents" sub={`${open.length} open`} icon={ShieldAlert} action={<Button size="sm" variant="danger" icon={Plus} onClick={() => setNewInc(true)}>New</Button>} />
             {data.incidents.length ? <Divided className="max-h-[480px] overflow-y-auto">{data.incidents.map((i: any) => (
               <Row key={i.id} onClick={() => setInc(i)} className={i.status === 'resolved' ? 'opacity-50' : ''}>
-                <span className={cx('size-2.5 shrink-0 rounded-full', { critical: 'bg-rose', high: 'bg-rose/70', medium: 'bg-marigold', low: 'bg-line' }[i.severity as string])} />
+                <span className={cx('size-2.5 shrink-0 rounded-full', { critical: 'bg-bad', high: 'bg-bad/70', medium: 'bg-haldi', low: 'bg-line' }[i.severity as string])} />
                 <div className="min-w-0 flex-1"><div className="truncate text-sm font-semibold">{i.title}</div><div className="truncate text-xs text-mute">{i.function_name || '—'} · {i.owner_name || 'unassigned'} · {ago(i.created_at)}</div></div>
                 <Status s={i.status === 'resolved' ? 'resolved' : i.severity} />
               </Row>
@@ -362,7 +362,7 @@ export function Live() {
           </Card>
           <Card className={cx(panel !== 'tasks' && 'hidden lg:block')}>
             <CardHeader title="Due today" icon={ListChecks} />
-            <Divided className="max-h-80 overflow-y-auto">{data.tasks.length ? data.tasks.map((t: any) => <div key={t.id} className="flex items-center gap-3 px-4 py-2.5"><button aria-label="Complete task" onClick={() => run('t', () => post(`/tasks/${t.id}/action`, { action: 'complete', override: true }, { queueLabel: t.title }), 'Done').then(reload)} className="grid size-5 shrink-0 place-items-center rounded-md border border-line hover:border-sage" /><div className="min-w-0 flex-1"><div className="truncate text-sm font-medium">{t.title}</div><div className="text-xs text-mute">{t.owner_name || '—'} · {time(t.due_at)}</div></div><Status s={t.status} /></div>) : <div className="p-4 text-sm text-mute">All done.</div>}</Divided>
+            <Divided className="max-h-80 overflow-y-auto">{data.tasks.length ? data.tasks.map((t: any) => <div key={t.id} className="flex items-center gap-3 px-4 py-2.5"><button aria-label="Complete task" onClick={() => run('t', () => post(`/tasks/${t.id}/action`, { action: 'complete', override: true }, { queueLabel: t.title }), 'Done').then(reload)} className="grid size-5 shrink-0 place-items-center rounded-md border border-line hover:border-ok" /><div className="min-w-0 flex-1"><div className="truncate text-sm font-medium">{t.title}</div><div className="text-xs text-mute">{t.owner_name || '—'} · {time(t.due_at)}</div></div><Status s={t.status} /></div>) : <div className="p-4 text-sm text-mute">All done.</div>}</Divided>
           </Card>
         </div>
         <Card className={cx(panel !== 'vendors' && 'hidden lg:block')}>
@@ -372,8 +372,8 @@ export function Live() {
               <div className="flex items-center justify-between gap-2"><div className="min-w-0"><div className="truncate text-sm font-semibold">{v.name}</div><div className="text-xs text-mute">{v.kind} · reports {time(v.report_at)}</div></div><Status s={v.live_status || v.status} label={v.live_status === 'delayed' ? `+${v.delay_min}m` : undefined} /></div>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {['arrived', 'setup', 'ready'].filter(a => a !== v.live_status).map(a => <Button key={a} size="sm" variant="ghost" onClick={() => vAct(v, a)}>{titleCase(a)}</Button>)}
-                <Button size="sm" variant="ghost" className="text-rose" onClick={() => { const m = prompt(`${v.name} is late by how many minutes?`, '20'); if (m) vAct(v, 'delay', +m) }}>Delay</Button>
-                {v.phone && <a href={`tel:${v.phone}`} className="inline-flex h-8 items-center rounded-lg px-2 text-xs font-semibold text-ink-2 hover:bg-sand"><Phone className="size-3.5" /></a>}
+                <Button size="sm" variant="ghost" className="text-bad" onClick={() => { const m = prompt(`${v.name} is late by how many minutes?`, '20'); if (m) vAct(v, 'delay', +m) }}>Delay</Button>
+                {v.phone && <a href={`tel:${v.phone}`} className="inline-flex h-8 items-center rounded-lg px-2 text-xs font-semibold text-ink-2 hover:bg-wash"><Phone className="size-3.5" /></a>}
               </div>
             </div>
           ))}</Divided>
@@ -381,10 +381,10 @@ export function Live() {
         <div className={cx('space-y-4', panel !== 'guests' && panel !== 'pickups' && 'hidden lg:block')}>
           <Card className={cx(panel !== 'guests' && 'hidden lg:block')}>
             <CardHeader title="Guest check-in" sub={cur ? `${s.arrived} of ${s.expected} heads` : 'Start a function first'} icon={UserCheck} />
-            <div className="p-3"><div className="relative"><Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-mute" /><input value={q} onChange={e => setQ(e.target.value)} placeholder="Find guest" aria-label="Find guest" className="h-11 w-full rounded-xl border border-line pr-3 pl-9 text-base focus:border-saffron focus:outline-none" /></div></div>
+            <div className="p-3"><div className="relative"><Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-mute" /><input value={q} onChange={e => setQ(e.target.value)} placeholder="Find guest" aria-label="Find guest" className="h-11 w-full rounded-xl border border-line pr-3 pl-9 text-base focus:border-brand focus:outline-none" /></div></div>
             <Divided className="max-h-80 overflow-y-auto">{attendees.slice(0, 80).map((g: any) => (
-              <button key={g.id} onClick={() => checkIn(g)} className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-paper">
-                <span className={cx('grid size-6 shrink-0 place-items-center rounded-full border', g.checked_in ? 'border-sage bg-sage text-white' : 'border-line')}>{g.checked_in ? <CheckIcon className="size-3.5" /> : null}</span>
+              <button key={g.id} onClick={() => checkIn(g)} className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-canvas">
+                <span className={cx('grid size-6 shrink-0 place-items-center rounded-full border', g.checked_in ? 'border-ok bg-ok text-white' : 'border-line')}>{g.checked_in ? <CheckIcon className="size-3.5" /> : null}</span>
                 <span className="flex-1 text-sm font-medium">{g.name}{g.vip ? ' 👑' : ''}</span><span className="text-xs text-mute">{g.headcount > 1 ? `party of ${g.headcount}` : ''}</span>
               </button>
             ))}</Divided>
@@ -403,7 +403,7 @@ export function Live() {
       </div>
       <Card className="mt-4">
         <CardHeader title="Timeline" sub="Functions for the day" icon={Clock} />
-        <div className="scroll-x flex gap-2 p-4">{data.functions.map((f: any) => <div key={f.id} className={cx('min-w-44 rounded-xl border p-3', f.live_status === 'live' ? 'border-rose bg-rose-50' : f.live_status === 'done' ? 'border-line opacity-60' : 'border-line')}><div className="text-xs text-mute">{date(f.date)} · {hhmm(f.start_time)}</div><div className="font-semibold">{f.name}</div><Status s={f.live_status} /></div>)}</div>
+        <div className="scroll-x flex gap-2 p-4">{data.functions.map((f: any) => <div key={f.id} className={cx('min-w-44 rounded-xl border p-3', f.live_status === 'live' ? 'border-bad bg-bad-50' : f.live_status === 'done' ? 'border-line opacity-60' : 'border-line')}><div className="text-xs text-mute">{date(f.date)} · {hhmm(f.start_time)}</div><div className="font-semibold">{f.name}</div><Status s={f.live_status} /></div>)}</div>
       </Card>
       <Card className="mt-4">
         <CardHeader title="Activity" sub="Everything that happened, newest first" icon={History} />
@@ -499,7 +499,7 @@ export function Media() {
     <Wrap scoped>
       <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div><h2 className="text-2xl font-medium">Media center</h2><p className="text-sm text-mute">Photographer upload → {data.host_approval ? 'host' : 'planner'} approval → publish to guests</p></div>
-        <label className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-xl bg-saffron px-4 text-sm font-semibold text-white hover:bg-[#9c4623]"><Upload className="size-4" />Upload<input type="file" multiple accept="image/*,video/*" className="sr-only" onChange={e => upload(e.target.files)} /></label>
+        <label className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-xl bg-brand px-4 text-sm font-semibold text-white hover:bg-[#0B5753]"><Upload className="size-4" />Upload<input type="file" multiple accept="image/*,video/*" className="sr-only" onChange={e => upload(e.target.files)} /></label>
       </div>
       {data.photographers.length > 0 && <Card className="mb-4"><CardHeader title="Photographer upload links" sub="No login. Uploads resume if the connection drops." icon={Camera} />
         <Divided>{data.photographers.map((p: any) => <div key={p.id} className="flex flex-wrap items-center gap-3 px-5 py-3"><div className="min-w-0 flex-1"><div className="font-semibold">{p.name}</div><div className="text-xs text-mute">{p.kind}</div></div><Button size="sm" icon={Copy} onClick={() => { navigator.clipboard?.writeText(location.origin + p.upload_link); toast('Link copied') }}>Copy link</Button><Button size="sm" icon={Send} onClick={() => run('s', () => post(`/weddings/${wid}/media/upload-link`, { vendor_id: p.id }), 'Sent on WhatsApp')}>Send</Button></div>)}</Divided>
@@ -515,11 +515,11 @@ export function Media() {
       {!items.length ? <Card><Empty icon={Image} title="No media here" /></Card> : (
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6">
           {items.map((m: any) => (
-            <div key={m.id} className={cx('group relative overflow-hidden rounded-xl border bg-sand', sel.has(m.id) ? 'border-saffron ring-2 ring-saffron/40' : 'border-line')}>
+            <div key={m.id} className={cx('group relative overflow-hidden rounded-xl border bg-wash', sel.has(m.id) ? 'border-brand ring-2 ring-brand/40' : 'border-line')}>
               <button className="block aspect-[4/3] w-full" onClick={() => setView(m)} aria-label={`View ${m.original_name}`}>{/video/.test(m.mime) ? <video src={fileUrl(m.file)} className="size-full object-cover" /> : <img src={fileUrl(m.file)} alt={m.original_name} loading="lazy" className="size-full object-cover" />}</button>
-              <label className="absolute top-2 left-2"><input type="checkbox" aria-label="Select" className="size-4 accent-[#b4532a]" checked={sel.has(m.id)} onChange={() => { const s = new Set(sel); s.has(m.id) ? s.delete(m.id) : s.add(m.id); setSel(s) }} /></label>
+              <label className="absolute top-2 left-2"><input type="checkbox" aria-label="Select" className="size-4 accent-[#0E6B66]" checked={sel.has(m.id)} onChange={() => { const s = new Set(sel); s.has(m.id) ? s.delete(m.id) : s.add(m.id); setSel(s) }} /></label>
               <div className="flex items-center justify-between gap-1 p-2 text-[11px]"><span className="truncate text-mute">{m.function_name || m.uploader || ''}</span><Status s={m.status} label={m.status === 'published' && m.album === 'private' ? 'private' : undefined} /></div>
-              {m.comment && <div className="px-2 pb-2 text-[11px] text-rose">“{m.comment}”</div>}
+              {m.comment && <div className="px-2 pb-2 text-[11px] text-bad">“{m.comment}”</div>}
             </div>
           ))}
         </div>
@@ -562,7 +562,7 @@ export function Approvals() {
       ) : (
         <Card>{!reqs ? <Loading /> : !reqs.length ? <Empty title="No requests from the host" /> : <Divided>{reqs.map(r => (
           <div key={r.id} className="px-5 py-4">
-            <div className="flex items-start justify-between gap-2"><div><div className="flex items-center gap-2 font-semibold">{r.title}<Badge>{r.kind}</Badge>{r.rating ? <span className="text-xs">{'⭐'.repeat(r.rating)}</span> : null}</div><p className="mt-0.5 text-sm text-ink-2">{r.body}</p>{r.response && <p className="mt-1 text-sm text-sage">↳ {r.response}</p>}</div><Status s={r.status} /></div>
+            <div className="flex items-start justify-between gap-2"><div><div className="flex items-center gap-2 font-semibold">{r.title}<Badge>{r.kind}</Badge>{r.rating ? <span className="text-xs">{'⭐'.repeat(r.rating)}</span> : null}</div><p className="mt-0.5 text-sm text-ink-2">{r.body}</p>{r.response && <p className="mt-1 text-sm text-ok">↳ {r.response}</p>}</div><Status s={r.status} /></div>
             {r.status === 'open' && <div className="mt-2 flex gap-2"><Input className="flex-1" aria-label="Response" placeholder="Reply to host…" value={open?.id === r.id ? resp : ''} onFocus={() => { setOpen(r); setResp('') }} onChange={e => setResp(e.target.value)} /><Button onClick={() => run('r', () => patch(`/weddings/${wid}/requests/${r.id}`, { response: resp, status: 'done' }), 'Host notified').then(() => { setOpen(null); rr() })}>Reply & close</Button></div>}
           </div>
         ))}</Divided>}</Card>
@@ -613,17 +613,17 @@ export function Documents({ scoped }: { scoped?: boolean }) {
         : <PageHeader title="Document center" sub="Contracts, invoices, tickets and plans — searchable, versioned and permissioned" actions={me.can.documents && <Button variant="primary" icon={Upload} onClick={() => setUp(true)}>Upload</Button>} />}
       <Card>
         <div className="flex flex-col gap-2 border-b border-line p-3 sm:flex-row">
-          <div className="relative flex-1"><Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-mute" /><input value={q} onChange={e => setQ(e.target.value)} placeholder="Search names, tags and document text" aria-label="Search documents" className="h-10 w-full rounded-xl border border-line pr-3 pl-9 text-sm focus:border-saffron focus:outline-none" /></div>
+          <div className="relative flex-1"><Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-mute" /><input value={q} onChange={e => setQ(e.target.value)} placeholder="Search names, tags and document text" aria-label="Search documents" className="h-10 w-full rounded-xl border border-line pr-3 pl-9 text-sm focus:border-brand focus:outline-none" /></div>
           <Select aria-label="Category" className="sm:w-48" value={cat} onChange={e => setCat(e.target.value)} placeholder="All categories" options={cats} />
         </div>
         {!data ? <Loading /> : <DataTable rows={data} rowKey={d => d.id} empty={<Empty icon={FolderOpen} title="No documents" />} cols={[
-          { key: 'n', label: 'Name', mobile: 'title', render: d => <a href={fileUrl(d.file)} target="_blank" className="flex items-center gap-2 font-semibold hover:text-saffron"><FileText className="size-4 shrink-0 text-mute" />{d.name}</a> },
+          { key: 'n', label: 'Name', mobile: 'title', render: d => <a href={fileUrl(d.file)} target="_blank" className="flex items-center gap-2 font-semibold hover:text-brand"><FileText className="size-4 shrink-0 text-mute" />{d.name}</a> },
           { key: 'c', label: 'Category', render: d => <Badge>{d.category}</Badge> },
           ...(!scoped ? [{ key: 'w', label: 'Wedding', mobile: 'sub' as const, render: (d: any) => d.wedding || 'Agency' }] : []),
-          { key: 'v', label: 'Version', render: d => <button className="text-xs font-semibold text-saffron" onClick={() => setVer(d)}>v{d.version}{d.versions > 1 ? ` (${d.versions})` : ''}</button> },
+          { key: 'v', label: 'Version', render: d => <button className="text-xs font-semibold text-brand" onClick={() => setVer(d)}>v{d.version}{d.versions > 1 ? ` (${d.versions})` : ''}</button> },
           { key: 'h', label: 'Host', render: d => d.host_visible ? <Badge tone="sky">visible</Badge> : <span className="text-xs text-mute">internal</span> },
           { key: 'u', label: 'Uploaded', render: d => <span className="text-xs text-mute">{d.uploader || 'link'} · {ago(d.created_at)}</span> },
-          { key: 'a', label: '', render: d => me.can.documents && <span className="flex gap-1">{d.wedding_id && <Button size="sm" variant="ghost" icon={Share2} onClick={() => setShare(d)}>Share</Button>}<Button size="sm" variant="ghost" onClick={() => run('h', () => patch(`/documents/${d.id}`, { host_visible: d.host_visible ? 0 : 1 }), d.host_visible ? 'Hidden from host' : 'Visible to host').then(reload)}>{d.host_visible ? 'Hide' : 'Show host'}</Button><Button size="sm" variant="ghost" className="text-rose" icon={Trash2} aria-label="Delete" onClick={() => window.confirm(`Delete ${d.name} and all versions?`) && run('d', () => del(`/documents/${d.id}`), 'Deleted').then(reload)} /></span> },
+          { key: 'a', label: '', render: d => me.can.documents && <span className="flex gap-1">{d.wedding_id && <Button size="sm" variant="ghost" icon={Share2} onClick={() => setShare(d)}>Share</Button>}<Button size="sm" variant="ghost" onClick={() => run('h', () => patch(`/documents/${d.id}`, { host_visible: d.host_visible ? 0 : 1 }), d.host_visible ? 'Hidden from host' : 'Visible to host').then(reload)}>{d.host_visible ? 'Hide' : 'Show host'}</Button><Button size="sm" variant="ghost" className="text-bad" icon={Trash2} aria-label="Delete" onClick={() => window.confirm(`Delete ${d.name} and all versions?`) && run('d', () => del(`/documents/${d.id}`), 'Deleted').then(reload)} /></span> },
         ]} />}
       </Card>
       <UploadDoc open={up} onClose={() => setUp(false)} wid={wid} cats={cats} onDone={() => { setUp(false); reload() }} />
@@ -642,7 +642,7 @@ function UploadDoc({ open, onClose, wid, cats, onDone }: any) {
   return (
     <Modal open={open} onClose={onClose} title="Upload document" size="md" footer={<><Button onClick={onClose}>Cancel</Button><Button variant="primary" disabled={!file} loading={busy === 'u'} onClick={go}>Upload</Button></>}>
       <div className="space-y-3">
-        <label className="flex cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed border-line p-5 hover:bg-paper"><Upload className="size-5 text-saffron" /><span className="text-sm">{file ? `${file.name} · ${(file.size / 1024).toFixed(0)} KB` : 'PDF, image, Word, Excel, CSV or text · max 50 MB'}</span><input type="file" className="sr-only" onChange={e => setFile(e.target.files?.[0] || null)} /></label>
+        <label className="flex cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed border-line p-5 hover:bg-canvas"><Upload className="size-5 text-brand" /><span className="text-sm">{file ? `${file.name} · ${(file.size / 1024).toFixed(0)} KB` : 'PDF, image, Word, Excel, CSV or text · max 50 MB'}</span><input type="file" className="sr-only" onChange={e => setFile(e.target.files?.[0] || null)} /></label>
         {!wid && <Select label="Wedding" value={f.wedding_id} onChange={e => setF({ ...f, wedding_id: e.target.value })} placeholder="Agency-wide" options={me.weddings.map(w => ({ value: w.id, label: w.name }))} />}
         <Select label="Category" value={f.category} onChange={e => setF({ ...f, category: e.target.value })} options={cats} />
         <Input label="Tags" value={f.tags} onChange={e => setF({ ...f, tags: e.target.value })} placeholder="venue, signed" />
@@ -654,7 +654,7 @@ function UploadDoc({ open, onClose, wid, cats, onDone }: any) {
 }
 function Versions({ d, onClose }: any) {
   const { data } = useApi<any[]>(d ? `/documents/${d.id}/versions` : null)
-  return <Modal open={!!d} onClose={onClose} title={`Versions · ${d?.name}`} size="sm">{!data ? <Loading /> : <Divided>{data.map(v => <a key={v.id} href={fileUrl(v.file)} target="_blank" className="flex items-center justify-between py-2.5 text-sm hover:text-saffron"><span><b>v{v.version}</b> · {v.uploader || 'link'}</span><span className="text-xs text-mute">{dateTime(v.created_at)}</span></a>)}</Divided>}</Modal>
+  return <Modal open={!!d} onClose={onClose} title={`Versions · ${d?.name}`} size="sm">{!data ? <Loading /> : <Divided>{data.map(v => <a key={v.id} href={fileUrl(v.file)} target="_blank" className="flex items-center justify-between py-2.5 text-sm hover:text-brand"><span><b>v{v.version}</b> · {v.uploader || 'link'}</span><span className="text-xs text-mute">{dateTime(v.created_at)}</span></a>)}</Divided>}</Modal>
 }
 function ShareDoc({ d, onClose }: any) {
   const { data: w } = useApi<any>(d?.wedding_id ? `/weddings/${d.wedding_id}` : null)
@@ -747,7 +747,7 @@ export function Setup() {
             <Button size="sm" icon={Plus} onClick={() => setFaq([...faq, { q: '', a: '' }])}>Add question</Button>
           </div>
         </Card>
-        <Card className="border-rose/30 p-5 xl:col-span-2">
+        <Card className="border-bad/30 p-5 xl:col-span-2">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><div className="font-semibold">Close & archive</div><p className="text-sm text-mute">Checks for open tasks, incidents, unpaid items, pending media approvals and testimonials first.</p></div><Button variant="danger" icon={Archive} onClick={() => doArchive()}>Archive wedding</Button></div>
         </Card>
       </div>
@@ -764,7 +764,7 @@ function FnModal({ f, onClose, onDone }: any) {
   useEffect(() => { if (f) setX(f) }, [f])
   const remove = async (force = false) => { try { await raw('d', () => del(`/weddings/${wid}/functions/${x.id}${force ? '?force=1' : ''}`)); onDone() } catch (e: any) { if (e.status === 409 && window.confirm(e.message)) remove(true) } }
   return (
-    <Modal open={!!f} onClose={onClose} title={x.id ? x.name : 'New function'} size="md" footer={<>{x.id && <Button variant="ghost" className="mr-auto text-rose" onClick={() => remove()}>Delete</Button>}<Button onClick={onClose}>Cancel</Button><Button variant="primary" disabled={!x.name} onClick={() => run('s', () => x.id ? patch(`/weddings/${wid}/functions/${x.id}`, x) : post(`/weddings/${wid}/functions`, x), 'Saved').then(onDone)}>Save</Button></>}>
+    <Modal open={!!f} onClose={onClose} title={x.id ? x.name : 'New function'} size="md" footer={<>{x.id && <Button variant="ghost" className="mr-auto text-bad" onClick={() => remove()}>Delete</Button>}<Button onClick={onClose}>Cancel</Button><Button variant="primary" disabled={!x.name} onClick={() => run('s', () => x.id ? patch(`/weddings/${wid}/functions/${x.id}`, x) : post(`/weddings/${wid}/functions`, x), 'Saved').then(onDone)}>Save</Button></>}>
       <div className="grid gap-3 sm:grid-cols-2">
         <Input className="sm:col-span-2" label="Name" value={x.name || ''} onChange={e => setX({ ...x, name: e.target.value })} />
         <Input label="Date" type="date" value={x.date || ''} onChange={e => setX({ ...x, date: e.target.value })} />
@@ -783,7 +783,7 @@ function HostModal({ h, onClose, onDone }: any) {
   const { run } = useAction()
   useEffect(() => { if (h) setX(h) }, [h])
   return (
-    <Modal open={!!h} onClose={onClose} title={x.id ? x.name : 'Add host'} size="sm" footer={<>{x.id && <Button variant="ghost" className="mr-auto text-rose" onClick={() => run('d', () => del(`/weddings/${wid}/hosts/${x.id}`), 'Host removed — link revoked').then(onDone)}>Remove</Button>}<Button onClick={onClose}>Cancel</Button><Button variant="primary" disabled={!x.name} onClick={() => run('s', () => x.id ? patch(`/weddings/${wid}/hosts/${x.id}`, x) : post(`/weddings/${wid}/hosts`, x), 'Saved').then(onDone)}>Save</Button></>}>
+    <Modal open={!!h} onClose={onClose} title={x.id ? x.name : 'Add host'} size="sm" footer={<>{x.id && <Button variant="ghost" className="mr-auto text-bad" onClick={() => run('d', () => del(`/weddings/${wid}/hosts/${x.id}`), 'Host removed — link revoked').then(onDone)}>Remove</Button>}<Button onClick={onClose}>Cancel</Button><Button variant="primary" disabled={!x.name} onClick={() => run('s', () => x.id ? patch(`/weddings/${wid}/hosts/${x.id}`, x) : post(`/weddings/${wid}/hosts`, x), 'Saved').then(onDone)}>Save</Button></>}>
       <div className="space-y-3">{(['name', 'relation', 'phone', 'email'] as const).map(k => <Input key={k} label={titleCase(k)} value={x[k] || ''} onChange={e => setX({ ...x, [k]: e.target.value })} />)}</div>
     </Modal>
   )

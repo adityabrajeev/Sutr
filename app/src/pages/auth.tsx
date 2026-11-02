@@ -9,16 +9,16 @@ import { date } from '../format'
 function Split({ children }: { children: React.ReactNode }) {
   return (
     <div className="grid min-h-dvh lg:grid-cols-[1.1fr_1fr]">
-      <div className="relative hidden overflow-hidden bg-ink p-12 text-paper lg:flex lg:flex-col lg:justify-between">
+      <div className="relative hidden overflow-hidden bg-ink p-12 text-canvas lg:flex lg:flex-col lg:justify-between">
         <div className="flex items-center gap-3"><img src="/icon.svg" className="size-10 rounded-xl" alt="" /><span className="display text-2xl">SUTR</span></div>
         <div>
-          <p className="display max-w-lg text-[44px] leading-[1.08]">Every guest, vendor and minute of the wedding — <em className="text-marigold">in one place.</em></p>
-          <p className="mt-5 max-w-md text-paper/60">The Wedding Operations OS: automate the repetitive, surface the exceptions, keep the judgement with you.</p>
+          <p className="display max-w-lg text-[44px] leading-[1.08]">Every guest, vendor and minute of the wedding — <em className="text-haldi">in one place.</em></p>
+          <p className="mt-5 max-w-md text-canvas/60">The Wedding Operations OS: automate the repetitive, surface the exceptions, keep the judgement with you.</p>
         </div>
-        <div className="grid grid-cols-3 gap-4 text-sm text-paper/70">
-          {[['Guest ops', 'RSVP, travel, rooms'], ['Vendor ops', 'Confirm, ETA, deliver'], ['Wedding day', 'Live command center']].map(([a, b]) => <div key={a}><div className="font-semibold text-paper">{a}</div>{b}</div>)}
+        <div className="grid grid-cols-3 gap-4 text-sm text-canvas/70">
+          {[['Guest ops', 'RSVP, travel, rooms'], ['Vendor ops', 'Confirm, ETA, deliver'], ['Wedding day', 'Live command center']].map(([a, b]) => <div key={a}><div className="font-semibold text-canvas">{a}</div>{b}</div>)}
         </div>
-        <svg className="pointer-events-none absolute -right-24 -bottom-24 size-[420px] opacity-[0.08]" viewBox="0 0 200 200"><circle cx="100" cy="100" r="90" stroke="#e5a43b" strokeWidth="2" fill="none" /><circle cx="100" cy="100" r="60" stroke="#e5a43b" strokeWidth="2" fill="none" /><circle cx="100" cy="100" r="30" stroke="#e5a43b" strokeWidth="2" fill="none" /></svg>
+        <svg className="pointer-events-none absolute -right-24 -bottom-24 size-[420px] opacity-[0.08]" viewBox="0 0 200 200"><circle cx="100" cy="100" r="90" stroke="#E8B12B" strokeWidth="2" fill="none" /><circle cx="100" cy="100" r="60" stroke="#E8B12B" strokeWidth="2" fill="none" /><circle cx="100" cy="100" r="30" stroke="#E8B12B" strokeWidth="2" fill="none" /></svg>
       </div>
       <div className="flex items-center justify-center p-6">{children}</div>
     </div>
@@ -50,7 +50,7 @@ export function Login() {
         <div className="rounded-2xl border border-dashed border-line p-4 text-sm">
           <div className="font-semibold">Exploring locally?</div>
           <p className="mt-0.5 text-mute">The demo hub lists every staff login and the guest, host, vendor and prospect links.</p>
-          <Link to="/demo" className="mt-2 inline-flex items-center gap-1 font-semibold text-saffron">Open demo hub<ArrowRight className="size-3.5" /></Link>
+          <Link to="/demo" className="mt-2 inline-flex items-center gap-1 font-semibold text-brand">Open demo hub<ArrowRight className="size-3.5" /></Link>
         </div>
       </form>
     </Split>
@@ -92,12 +92,12 @@ export function DemoHub() {
   if (!data) return <Loading />
   const roleIcon: any = { owner: Crown, planner: Heart, coordinator: Users2 }
   return (
-    <div className="min-h-dvh bg-paper">
-      <div className="bg-ink px-5 py-10 text-paper sm:px-10">
+    <div className="min-h-dvh bg-canvas">
+      <div className="bg-ink px-5 py-10 text-canvas sm:px-10">
         <div className="mx-auto max-w-6xl">
           <div className="flex items-center gap-3"><img src="/icon.svg" className="size-9 rounded-xl" alt="" /><span className="display text-xl">SUTR · Demo hub</span></div>
           <h1 className="display mt-6 max-w-3xl text-4xl leading-tight sm:text-5xl">Step into any persona.</h1>
-          <p className="mt-3 max-w-2xl text-paper/65">Everything here runs against your local database, seeded for <b className="text-paper">{data.agency.name}</b>. Staff use the web app; hosts, guests, vendors and prospects use secure one-purpose links, with no accounts. WhatsApp and OCR are simulated, so every message shows up in each person's link page.</p>
+          <p className="mt-3 max-w-2xl text-canvas/65">Everything here runs against your local database, seeded for <b className="text-canvas">{data.agency.name}</b>. Staff use the web app; hosts, guests, vendors and prospects use secure one-purpose links, with no accounts. WhatsApp and OCR are simulated, so every message shows up in each person's link page.</p>
         </div>
       </div>
       <div className="mx-auto max-w-6xl space-y-8 px-5 py-8 sm:px-10">
@@ -107,10 +107,10 @@ export function DemoHub() {
             {data.staff.filter((s: any) => s.status === 'active').map((s: any) => {
               const I = roleIcon[s.role] || UserRound
               return (
-                <button key={s.email} onClick={() => signIn(s.email)} disabled={!!busy} className="group flex items-center gap-3 rounded-2xl border border-line bg-card p-4 text-left shadow-card hover:border-saffron/50">
-                  <div className="grid size-10 place-items-center rounded-xl bg-saffron-50 text-saffron"><I className="size-5" /></div>
+                <button key={s.email} onClick={() => signIn(s.email)} disabled={!!busy} className="group flex items-center gap-3 rounded-2xl border border-line bg-card p-4 text-left shadow-card hover:border-brand/50">
+                  <div className="grid size-10 place-items-center rounded-xl bg-brand-50 text-brand"><I className="size-5" /></div>
                   <div className="min-w-0 flex-1"><div className="font-semibold">{s.name}</div><div className="truncate text-xs text-mute">{s.title} · <span className="capitalize">{s.role}</span></div></div>
-                  <ArrowRight className={cx('size-4 text-mute group-hover:text-saffron', busy === s.email && 'animate-pulse')} />
+                  <ArrowRight className={cx('size-4 text-mute group-hover:text-brand', busy === s.email && 'animate-pulse')} />
                 </button>
               )
             })}
@@ -146,8 +146,8 @@ export function DemoHub() {
 
 function LinkRow({ icon: I, label, sub, to, card }: any) {
   return (
-    <Link to={to} target="_blank" className={cx('flex items-center gap-3 rounded-xl px-3 py-2 hover:bg-sand', card && 'border border-line bg-card shadow-card')}>
-      <I className="size-4 shrink-0 text-saffron" /><span className="min-w-0 flex-1"><span className="block truncate font-semibold">{label}</span><span className="block truncate text-xs text-mute">{sub}</span></span><ArrowRight className="size-3.5 text-mute" />
+    <Link to={to} target="_blank" className={cx('flex items-center gap-3 rounded-xl px-3 py-2 hover:bg-wash', card && 'border border-line bg-card shadow-card')}>
+      <I className="size-4 shrink-0 text-brand" /><span className="min-w-0 flex-1"><span className="block truncate font-semibold">{label}</span><span className="block truncate text-xs text-mute">{sub}</span></span><ArrowRight className="size-3.5 text-mute" />
     </Link>
   )
 }

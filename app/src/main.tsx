@@ -6,6 +6,8 @@ import { AuthProvider, useAuth } from './auth'
 import { ToastProvider, Loading } from './ui'
 import { AppShell, WeddingLayout } from './shell'
 import { Login, AcceptInvite, DemoHub } from './pages/auth'
+import { PersonaSwitcher } from './persona'
+import { useMe } from './auth'
 
 const Agency = () => import('./pages/agency')
 const Core = () => import('./pages/wedding-core')
@@ -14,6 +16,7 @@ const Exec = () => import('./pages/wedding-exec')
 const Biz = () => import('./pages/business')
 const L = <M, K extends keyof M>(m: () => Promise<M>, k: K): React.ComponentType<any> => lazy(() => m().then(x => ({ default: x[k] as any })))
 
+const Shift = lazy(() => import('./pages/shift'))
 const Brief = L(Agency, 'Brief'), Weddings = L(Agency, 'Weddings'), CreateWedding = L(Agency, 'CreateWedding')
 const Overview = L(Core, 'Overview'), Guests = L(Core, 'Guests'), Rsvp = L(Core, 'Rsvp'), Comms = L(Core, 'Comms')
 const Travel = L(Ops, 'Travel'), Rooms = L(Ops, 'Rooms'), WeddingVendors = L(Ops, 'WeddingVendors'), Budget = L(Ops, 'Budget')
@@ -35,9 +38,13 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
+// Each staff role gets its own home: planners run the agency, coordinators run their shift.
+function Home() { return useMe().admin ? <Brief /> : <Shift /> }
+
 function App() {
   return (
     <Suspense fallback={<Loading />}>
+      <PersonaSwitcher />
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/invite/:token" element={<AcceptInvite />} />
@@ -49,7 +56,7 @@ function App() {
         <Route path="/d/:token" element={<SharedDoc />} />
         <Route path="/studio/:slug" element={<PublicPortfolio />} />
         <Route element={<RequireAuth><AppShell /></RequireAuth>}>
-          <Route index element={<Brief />} />
+          <Route index element={<Home />} />
           <Route path="weddings" element={<Weddings />} />
           <Route path="weddings/new" element={<CreateWedding />} />
           <Route path="w/:wid" element={<WeddingLayout />}>

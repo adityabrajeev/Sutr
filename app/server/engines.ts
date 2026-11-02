@@ -408,6 +408,17 @@ export function suggestHouseholds(wid: string) {
 // =====================================================================
 type Item = { severity: 'critical' | 'warning' | 'info'; domain: string; title: string; detail?: string; module: string; next?: string }
 
+
+/** Turn "1 guest(s) haven't" into "1 guest hasn't" and "3 reply(ies)" into "3 replies". */
+export function plain(t: string) {
+  return t
+    .replace(/(\d+) ([^()]*?)y\(ies\)/g, (_, n, w) => `${n} ${w}${+n === 1 ? 'y' : 'ies'}`)
+    .replace(/(\d+) ([^()]*?)\(s\)/g, (_, n, w) => `${n} ${w}${+n === 1 ? '' : 's'}`)
+    .replace(/^1 ([\w ]+?) haven't/, "1 $1 hasn't")
+    .replace(/^1 ([\w ]+?) need /, '1 $1 needs ')
+    .replace(/\(s\)/g, '')
+}
+
 export function weddingHealth(wid: string) {
   const w = weddingOf(wid)
   if (!w) return null
@@ -488,6 +499,7 @@ export function weddingHealth(wid: string) {
     tasks: { score: pct(overdue + blocked, tTotal), metric: `${overdue} overdue · ${blocked} blocked` },
     budget: { score: planned ? Math.max(0, Math.round(100 - Math.max(0, (actual / planned - 1) * 200))) : 100, metric: `${Math.round(planned ? actual / planned * 100 : 0)}% spent` },
   }
+  for (const i of q) i.title = plain(i.title)
   const order = { critical: 0, warning: 1, info: 2 }
   q.sort((a, b) => order[a.severity] - order[b.severity])
   const vals = Object.values(domains).map(d => d.score)
@@ -508,9 +520,9 @@ export function morningBrief(user: any, weddingIds: string[]) {
   const team = all(`SELECT id, name, title, role, unavailable, shift_status FROM users WHERE agency_id = ? AND status = 'active'`, user.agency_id)
     .map(u => ({ ...u, available_today: !(u.unavailable || []).some((r: any) => r.from <= today && r.to >= today) }))
   const leads = all(`SELECT l.*, (SELECT status FROM proposals p WHERE p.lead_id = l.id ORDER BY version DESC LIMIT 1) AS proposal_status FROM leads l WHERE l.agency_id = ? AND l.status IN ('new','proposal_sent','revision') ORDER BY l.updated_at DESC LIMIT 6`, user.agency_id)
-  const summary = critical.length
+  const summary = plain(critical.length
     ? `${critical.length} critical item(s) across ${new Set(critical.map(c => c.wedding_id)).size} wedding(s) need you first.`
-    : attention.length ? `No fires. ${attention.length} item(s) need attention today.` : 'All weddings are on track.'
+    : attention.length ? `No fires. ${attention.length} item(s) need attention today.` : 'All weddings are on track.')
   return { date: today, summary, critical, attention: attention.slice(0, 12), functions, my_tasks: myTasks, team, leads, weddings: weddings.map(w => ({ id: w.id, name: w.name, couple: w.couple, start_date: w.start_date, end_date: w.end_date, city: w.city, status: w.status, score: w.health!.score, days_out: w.health!.days_out, top: w.health!.queue[0] || null })) }
 }
 
